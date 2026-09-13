@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Offline-Local-Voice-Agent
 
 100% 離線、斷網可用的 Windows 語音桌面代理人。
@@ -38,3 +39,6 @@ Offline-Local-Voice-Agent/
 ## 下一步
 
 見 `CLAUDE.md`，這是給 Claude Code 開工時讀的第一份文件。
+=======
+# Offline-Local-Voice-Agent
+>>>>>>> bdb74cf8a259c261fa05cef7cc9aef9838c05ef4
