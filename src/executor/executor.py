@@ -57,6 +57,7 @@ TOOL_IMPLEMENTATIONS = {
     "press_key": lambda args: basic_tools.press_key(_require(args, "key", "press_key")),
     "hotkey": lambda args: basic_tools.hotkey(_require(args, "keys", "hotkey")),
     "speech_to_text_op": lambda args: basic_tools.speech_to_text(_require(args, "audio_path", "speech_to_text_op")),
+    "record_screen": lambda args: basic_tools.record_screen(_require(args, "action", "record_screen")),
 }
 
 

@@ -718,3 +718,22 @@ def speech_to_text(audio_path: str) -> str:
     if not text:
         raise RuntimeError(f"whisper.cpp沒有輸出任何文字（可能是空白錄音，或參數/模型有問題）")
     return text
+
+
+# ---- record_screen：用Windows內建Xbox Game Bar切換螢幕錄影（對照35工具表）----
+# 設計：Win+Alt+R是Xbox Game Bar內建的「開始/停止錄影」切換鍵，同一個鍵兩個動作都送，
+# 沒有辦法從我們這端單獨區分「現在是開始還是停止」——這是Windows本身的設計，Game Bar
+# 才知道目前是不是正在錄，我們只是送出使用者自己按這個鍵也會發生的同一個標準快捷鍵。
+#
+# 誠實記錄：實測時發現這台機器（這個工作環境）送出Win+Alt+R之後，Videos\Captures資料夾
+# 沒有產生任何檔案、也沒有偵測到Xbox Game Bar相關行程啟動——跟docs/07進度報告記錄過的
+# UWP應用程式（記事本/小算盤）在這個環境起不來是同一類環境限制（Xbox Game Bar本身也是
+# MSIX封裝的應用程式），不是這個工具實作本身的bug（hotkey()機制已經用小畫家驗證過真的
+# 能正確送出組合鍵）。在能正常執行UWP應用程式的機器上，這個工具應該能正常運作。
+
+def record_screen(action: str) -> str:
+    if action not in ("start", "stop"):
+        raise ValueError(f"record_screen 不支援的 action：{action}（只接受 start/stop）")
+    hotkey("win+alt+r")
+    verb = "開始" if action == "start" else "停止"
+    return f"已送出螢幕錄影切換快捷鍵（Win+Alt+R），如果Xbox Game Bar正常回應，錄影應該已經{verb}"

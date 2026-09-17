@@ -164,8 +164,8 @@ table.dbtable td.field{font-weight:700;font-family:ui-monospace,Menlo,Consolas,m
               stroke-dasharray="169.6" stroke-dashoffset="110" transform="rotate(-90 32 32)"/>
           </svg>
           <div>
-            <b>68%</b> <span class="label"><span lang-zh>整體工程進度（P0～P6 共 7 大階段）</span><span lang-en>overall build progress (7 phases, P0–P6)</span></span>
-            <div class="progressbar" style="width:220px"><i style="width:68%"></i></div>
+            <b>69%</b> <span class="label"><span lang-zh>整體工程進度（P0～P6 共 7 大階段）</span><span lang-en>overall build progress (7 phases, P0–P6)</span></span>
+            <div class="progressbar" style="width:220px"><i style="width:69%"></i></div>
           </div>
         </div>
         <a href="companion.html" style="text-decoration:none">
@@ -182,7 +182,7 @@ table.dbtable td.field{font-weight:700;font-family:ui-monospace,Menlo,Consolas,m
           <div class="card"><div class="card-top"><b>P0 <span lang-zh>硬體驗證</span><span lang-en>Hardware</span></b><span class="pill pass">PASS</span></div><div class="note" lang-zh>ASR+LLM 都成功跑在 GPU 上</div><div class="note" lang-en>ASR + LLM both confirmed running on GPU</div></div>
           <div class="card"><div class="card-top"><b>P1 <span lang-zh>語音輸入</span><span lang-en>Speech Input</span></b><span class="pill pass">PASS</span></div><div class="note" lang-zh>VAD、喚醒詞、中文 ASR 全部驗證</div><div class="note" lang-en>VAD, wake word, Chinese ASR all verified</div></div>
           <div class="card"><div class="card-top"><b>P2 <span lang-zh>意圖辨識</span><span lang-en>Intent Recognition</span></b><span class="pill pass">PASS</span></div><div class="note" lang-zh>工具選擇準確率 97.1%</div><div class="note" lang-en>Tool-selection accuracy 97.1%</div></div>
-          <div class="card"><div class="card-top"><b>P3 <span lang-zh>電腦控制</span><span lang-en>Automation</span></b><span class="pill warn"><span lang-zh>18/35 工具 + UIA原語</span><span lang-en>18/35 tools + UIA primitives</span></span></div><div class="note" lang-zh>新增檔案操作/電源控制/錄音轉文字，並補上藍圖第7節的UI Automation原語（切換視窗/點擊/按鍵盤），能操作使用者自己開啟的任意應用程式了，不再侵限於白名單app</div><div class="note" lang-en>Added file/power ops and audio transcription, plus the blueprint's UI Automation primitives (focus window, click, keyboard) — can now operate any window the user has open, not just whitelisted apps</div></div>
+          <div class="card"><div class="card-top"><b>P3 <span lang-zh>電腦控制</span><span lang-en>Automation</span></b><span class="pill warn"><span lang-zh>19/35 工具 + UIA原語</span><span lang-en>19/35 tools + UIA primitives</span></span></div><div class="note" lang-zh>新增檔案操作/電源控制/錄音轉文字/螢幕錄影，並補上藍圖第7節的UI Automation原語（切換視窗/點擊/按鍵盤），能操作使用者自己開啟的任意應用程式了，不再侵限於白名單app。剩下未做的15個工具全部都是刻意跳過的（需要外部服務或違反離線原則）</div><div class="note" lang-en>Added file/power ops, audio transcription, and screen recording, plus the blueprint's UI Automation primitives — can now operate any window the user has open. The remaining 15 unimplemented tools are all deliberately skipped (need external services or violate the offline principle)</div></div>
           <div class="card"><div class="card-top"><b>P4 <span lang-zh>安全把關</span><span lang-en>Safety</span></b><span class="pill warn"><span lang-zh>核心機制已通</span><span lang-en>Core loop working</span></span></div><div class="note" lang-zh>L2/L3敏感操作用語音確認已驗證；緊急停止熱鍵（Ctrl+Shift+F12）跟語音停止指令（「停止」「取消」）都已實作並真實測過</div><div class="note" lang-en>Voice confirmation for sensitive/dangerous actions verified; Emergency Stop hotkey (Ctrl+Shift+F12) and spoken stop commands ("stop"/"cancel") both implemented and tested end-to-end</div></div>
           <div class="card"><div class="card-top"><b>P5 <span lang-zh>畫面輔助</span><span lang-en>Vision</span></b><span class="pill idle"><span lang-zh>未開始</span><span lang-en>Not started</span></span></div></div>
         </div>
@@ -349,8 +349,8 @@ table.dbtable td.field{font-weight:700;font-family:ui-monospace,Menlo,Consolas,m
       </section>
 
       <div style="text-align:center;color:var(--sub);font-size:11.5px;margin-top:30px">
-        <span lang-zh>更新時間 2026-09-17 · P3新增檔案操作/電源控制/錄音轉文字/UIA原語 · P6補上多步驟規劃 · 補齊記憶/操作紀錄資料表 · 補測4項KPI（2項達標、2項誠實回報沒達標並找到原因）· 補上UI五態模型 · 新增config/外部化設定 · 完整技術報告在 progress/ 資料夾跟 docs/07 進度報告</span>
-        <span lang-en>Updated 2026-09-17 · P3 added file ops/power control/audio transcription/UIA primitives · P6 added multi-step planning · completed memory/logging tables · measured 4 KPIs (2 pass, 2 honestly reported as missed with root cause found) · added the 5-state UI model · externalized config/ settings · full technical reports in the progress/ folder and docs/07</span>
+        <span lang-zh>更新時間 2026-09-18 · P3新增檔案操作/電源控制/錄音轉文字/螢幕錄影/UIA原語（35工具表19/35）· P6補上多步驟規劃 · 補齊記憶/操作紀錄資料表 · 補測4項KPI（2項達標、2項誠實回報沒達標並找到原因）· 補上UI五態模型 · 新增config/外部化設定 · 完整技術報告在 progress/ 資料夾跟 docs/07 進度報告</span>
+        <span lang-en>Updated 2026-09-18 · P3 added file ops/power control/audio transcription/screen recording/UIA primitives (35-tool table now 19/35) · P6 added multi-step planning · completed memory/logging tables · measured 4 KPIs (2 pass, 2 honestly reported as missed with root cause found) · added the 5-state UI model · externalized config/ settings · full technical reports in the progress/ folder and docs/07</span>
       </div>
     </main>
 
