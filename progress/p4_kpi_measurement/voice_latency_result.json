@@ -1,0 +1,22 @@
+{
+  "raw_timestamps_unix": {
+    "wake_detected": 1789658880.8994532,
+    "utterance_end": 1789658884.7986157,
+    "asr_result": 1789658886.3237307,
+    "asr_result_text": "現在幾點",
+    "executing": 1789658886.5541308,
+    "action_result": 1789658887.012914,
+    "action_summary": "現在是 2026-09-17 23:28:06，星期四"
+  },
+  "asr_text": "現在幾點",
+  "action_summary": "現在是 2026-09-17 23:28:06，星期四",
+  "wake_to_asr_ms": 5424.3,
+  "wake_to_asr_target_ms": 1500,
+  "wake_to_asr_pass": false,
+  "asr_result_to_executing_ms": 230.4,
+  "executing_to_done_ms": 458.8,
+  "note_tool_start": "此架構Executor.run()是同步呼叫，決策完成即刻執行，沒有額外派工延遲；executing_to_done_ms包含LLM決策+實際執行兩段",
+  "wake_to_done_ms": 6113.5,
+  "wake_to_done_target_ms": 3000,
+  "wake_to_done_pass": false
+}

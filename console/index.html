@@ -285,6 +285,14 @@ table.dbtable td.field{font-weight:700;font-family:ui-monospace,Menlo,Consolas,m
         </div>
       </section>
 
+      <section id="latency-finding">
+        <div class="sec-head"><h2><span lang-zh>誠實回報：兩項延遲指標測出來沒有達標</span><span lang-en>Honest finding: two latency targets are not met</span></h2></div>
+        <div class="stack">
+          <p lang-zh>用真的語音（不是打字）量測「喚醒後多久能聽懂你說的話」，結果是5.4秒左右，比原本設定的1.5秒目標慢很多；整體從喚醒到回覆完成大約6.1秒，也超過3秒的目標。拆解後發現問題不在語音辨識本身（那部分大約1.5秒，正常），而是系統為了「確認你真的講完話了」會刻意多等一段安靜的時間——這是先前刻意做的安全設計（等太短會誤判你話還沒講完就把你打斷），但這次量測第一次把這個取捨的真實代價用數字攤開來看。要縮短這段延遲，需要重新設計「怎麼判斷你講完了」這件事，跟「不要誤判打斷你」互相拉扯，不是調一下參數就能兩全，這點會誠實留在待辦清單裡，不會假裝已經解決。</p>
+          <p lang-en>Measured "how long after wake-up until the system understands you" using real voice (not typed text): about 5.4 seconds, well over the 1.5-second target; end-to-end from wake-up to a finished reply is about 6.1 seconds, over the 3-second target. Breaking it down shows the problem isn't speech recognition itself (about 1.5s, normal) — it's that the system deliberately waits through a stretch of silence to confirm you've actually finished talking. That's an intentional safety tradeoff from earlier work (cutting the wait too short risks interrupting you mid-sentence), but this measurement is the first time the real cost of that tradeoff has been put into numbers. Shortening it means redesigning how "finished speaking" gets detected, which pulls against not interrupting you — not a simple parameter tweak, and it's staying on the honest to-do list rather than being papered over.</p>
+        </div>
+      </section>
+
       <section id="aeris-orders">
         <div class="sec-head"><h2><span lang-zh>送給 AERIS 的訂單</span><span lang-en>Orders sent to AERIS</span></h2></div>
         <p class="sec-sub" lang-zh>語音代理人（這個介面）判斷是聲學工程問題時，會引導你把需求講清楚，產生一份「訂單」交給 AERIS 後台處理。這裡列出最近送出的訂單跟目前狀態。</p>
@@ -341,8 +349,8 @@ table.dbtable td.field{font-weight:700;font-family:ui-monospace,Menlo,Consolas,m
       </section>
 
       <div style="text-align:center;color:var(--sub);font-size:11.5px;margin-top:30px">
-        <span lang-zh>更新時間 2026-09-17 · P3新增檔案操作/電源控制/錄音轉文字/UIA原語 · P6補上多步驟規劃 · 補齊記憶/操作紀錄資料表 · 補測2項KPI · 補上UI五態模型 · 新增config/外部化設定 · 完整技術報告在 progress/ 資料夾跟 docs/07 進度報告</span>
-        <span lang-en>Updated 2026-09-17 · P3 added file ops/power control/audio transcription/UIA primitives · P6 added multi-step planning · completed memory/logging tables · measured 2 KPIs · added the 5-state UI model · externalized config/ settings · full technical reports in the progress/ folder and docs/07</span>
+        <span lang-zh>更新時間 2026-09-17 · P3新增檔案操作/電源控制/錄音轉文字/UIA原語 · P6補上多步驟規劃 · 補齊記憶/操作紀錄資料表 · 補測4項KPI（2項達標、2項誠實回報沒達標並找到原因）· 補上UI五態模型 · 新增config/外部化設定 · 完整技術報告在 progress/ 資料夾跟 docs/07 進度報告</span>
+        <span lang-en>Updated 2026-09-17 · P3 added file ops/power control/audio transcription/UIA primitives · P6 added multi-step planning · completed memory/logging tables · measured 4 KPIs (2 pass, 2 honestly reported as missed with root cause found) · added the 5-state UI model · externalized config/ settings · full technical reports in the progress/ folder and docs/07</span>
       </div>
     </main>
 
@@ -357,6 +365,7 @@ table.dbtable td.field{font-weight:700;font-family:ui-monospace,Menlo,Consolas,m
       <a href="#uia-primitives"><span lang-zh>UIA原語</span><span lang-en>UIA Primitives</span></a>
       <a href="#planner"><span lang-zh>多步驟規劃</span><span lang-en>Multi-step Planning</span></a>
       <a href="#memory-logging"><span lang-zh>記憶跟紀錄</span><span lang-en>Memory & Logging</span></a>
+      <a href="#latency-finding"><span lang-zh>延遲量測發現</span><span lang-en>Latency Finding</span></a>
       <a href="#aeris-orders"><span lang-zh>AERIS 訂單</span><span lang-en>AERIS Orders</span></a>
       <a href="#roadmap"><span lang-zh>接下來</span><span lang-en>Roadmap</span></a>
       <a href="#backend"><span lang-zh>後端/資料庫</span><span lang-en>Backend/DB</span></a>
