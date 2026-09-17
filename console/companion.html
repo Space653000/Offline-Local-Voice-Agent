@@ -57,6 +57,9 @@ h1,h2,h3{font-family:inherit;margin:0;text-wrap:balance}
 .orb-wrap[data-state="front_desk"] .ring{border-color:var(--accent);animation:pulseRing 1.1s ease-out infinite}
 .ring2{animation-delay:.4s !important}
 .orb-wrap[data-state="not_running"] .orb{background:var(--fail-bg);border-color:var(--fail)}
+.orb-wrap[data-state="executing"] .orb{background:var(--warn-bg);border-color:var(--warn);animation:spin 1.4s linear infinite}
+.orb-wrap[data-state="waiting_confirmation"] .orb{background:var(--warn-bg);border-color:var(--warn)}
+.orb-wrap[data-state="waiting_confirmation"] .ring{border-color:var(--warn);animation:pulseRing .9s ease-out infinite}
 
 .status-text{font-size:22px;font-weight:800;text-align:center;margin-bottom:6px}
 .status-sub{font-size:13.5px;color:var(--sub);text-align:center;margin-bottom:28px}
@@ -254,13 +257,16 @@ h1,h2,h3{font-family:inherit;margin:0;text-wrap:balance}
     wake_detected: ['我聽到你了！', '準備聽你說話'],
     listening_command: ['請說吧', '我在聽你說話'],
     thinking: ['我在想...', '稍等一下'],
+    executing: ['執行中...', '正在幫你做這件事'],
+    waiting_confirmation: ['等你確認', '這個動作需要你同意才會繼續'],
     speaking: ['助理說話中', ''],
     front_desk: ['多問幾句', '幫你把問題整理清楚'],
     not_running: ['還沒開始', '請先啟動語音助理程式'],
   };
   var ICONS = {
     idle: '🎙️', wake_detected: '👂', listening_command: '👂',
-    thinking: '💭', speaking: '💬', front_desk: '🔧', not_running: '⏸️',
+    thinking: '💭', executing: '⚙️', waiting_confirmation: '⚠️',
+    speaking: '💬', front_desk: '🔧', not_running: '⏸️',
   };
 
   var orbWrap = document.getElementById('orbWrap');

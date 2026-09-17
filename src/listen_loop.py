@@ -283,6 +283,7 @@ class ListenLoop:
             audit_db.sync_policy_rules()
             audit_db.touch_session(self.session_id, last_instruction=text)
             runner = PlanRunner(text, Executor(), session_id=self.session_id)
+            self.on_event({"type": "executing", "text": text})
             plan_result = runner.run()
             while plan_result["status"] == "plan_needs_confirmation":
                 self.on_event({"type": "needs_confirmation", "reason": plan_result["reason"], "level": plan_result["level"]})
@@ -313,6 +314,24 @@ class ListenLoop:
 LIVE_STATE_FILE = Path(__file__).parent.parent / "console" / "live_state.json"
 
 
+# 對照 docs/01 藍圖第18節：UI 只需要5個canonical狀態（Listening/Thinking/Executing/
+# Waiting confirmation/Stopped）。docs/07 進度報告第10節指出這裡原本沒有明確對應——
+# 細顆粒度的status（wake_detected/listening_command等）留著給companion.html的動畫用，
+# 另外加一個canonical_state欄位對應藍圖要求的5態，兩者並存，不用二選一。
+CANONICAL_STATE_MAP = {
+    "idle": "Listening",
+    "wake_detected": "Listening",
+    "listening_command": "Listening",
+    "thinking": "Thinking",
+    "executing": "Executing",
+    "speaking": "Executing",       # Front Desk 問問題/複誦內容，本質是正在執行多輪引導任務
+    "front_desk": "Executing",
+    "waiting_confirmation": "Waiting confirmation",
+    "stopped": "Stopped",
+    "not_running": "Stopped",
+}
+
+
 class LiveStateWriter:
     """
     把技術性事件翻成新手看得懂的白話狀態，寫進一個小檔案，讓網頁版的「即時陪伴」介面可以顯示
@@ -331,6 +350,7 @@ class LiveStateWriter:
             self.response = response
         data = {
             "status": status, "message": message,
+            "canonical_state": CANONICAL_STATE_MAP.get(status, "Listening"),
             "transcript": self.transcript, "response": self.response,
             "updated_at": time.time(),
         }
@@ -375,14 +395,24 @@ def run_live(device: int = None):
             state.update("idle", "沒聽清楚，可以再說一次「嗨小助理」")
         elif et == "mode":
             pass
+        elif et == "executing":
+            print(f"⚙️  正在執行：「{e['text']}」")
+            state.update("executing", "正在執行你的指令...")
         elif et == "action_result":
-            print(f"✅ {e['result']}")
-            r = e["result"]
-            msg = r.get("result") if isinstance(r, dict) and r.get("executed") else "完成了"
+            # 對照PlanRunner整合後的事件格式（history=真實執行過的每一步，summary=完成時的結果文字，
+            # error=沒完成時的原因）——這裡原本還在用改版前的e['result']欄位，會在這裡直接丟KeyError，
+            # 是這次盤點施工時順便抓到的真實bug，不是新寫的功能才有的問題。
+            msg = e.get("summary") or e.get("error") or "完成了"
+            print(f"✅ {msg}")
             state.update("idle", "待命中，說「嗨小助理」開始", response=str(msg))
         elif et == "needs_confirmation":
             print(f"⚠️  這個動作需要你確認：{e['reason']}")
-            state.update("speaking", f"這個動作需要確認：{e['reason']}")
+            state.update("waiting_confirmation", f"這個動作需要確認：{e['reason']}")
+        elif et == "stopped_by_voice":
+            # 之前完全沒接這個事件——使用者講「停止」之後，畫面會停在原本的狀態沒有更新，
+            # 使用者講完看畫面完全沒反應，這是這次盤點順便抓到的真實UI落差。
+            print(f"🛑 語音停止指令：「{e['text']}」")
+            state.update("idle", "好，已經取消了，說「嗨小助理」重新開始")
         elif et == "acoustic_case_started":
             print(f"🔧 這聽起來是聲學工程問題，交給 AERIS Front Desk 引導...")
             state.update("front_desk", "這聽起來是專業問題，讓我多問你幾句...")

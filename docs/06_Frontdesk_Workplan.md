@@ -126,6 +126,15 @@
 2. 直接測L3決策：隨口說「對阿好」→ 正確拒絕（approved=False）；講出關鍵字「確認執行」→ 正確通過（approved=True）
 3. 過程中順便發現並修正一個真實風險分級問題：`network_toggle`（Wi-Fi開關）原本設L1（免確認），但意識到關Wi-Fi可能打斷使用者在同一台電腦上的其他網路活動（下載/通話/瀏覽），不是「可逆」就等於「低風險」，升級成L2
 
+## 補上UI五態模型，順便抓到兩個真實bug（對照 docs/07 進度報告第10節）
+
+藍圖第18節要求UI只需要5個canonical狀態（Listening/Thinking/Executing/Waiting confirmation/Stopped），`docs/07`第10節指出原本沒有明確對應，尤其「Executing」跟「Waiting confirmation」沒有獨立可視化。這次在`listen_loop.py`加了`CANONICAL_STATE_MAP`，把現有細顆粒度狀態（idle/wake_detected/listening_command/thinking/speaking/front_desk/stopped/not_running）跟新增的兩個狀態（`executing`/`waiting_confirmation`）都對應到藍圖的5態，`LiveStateWriter.update()`寫進`live_state.json`時多帶一個`canonical_state`欄位（細顆粒度狀態不拿掉，給`companion.html`的動畫用；藍圖要求的5態並存，不是二選一）。`companion.html`也加了這兩個新狀態的圖示/文字/顏色，用假的`live_state.json`實際在瀏覽器截圖確認過畫面正確（橘色驚嘆號=等待確認、旋轉齒輪=執行中）。
+
+**修這個功能時，靠著要重新檢查`run_live()`的`on_event`，意外抓到兩個真實bug（不是這次新寫的功能才有的問題，是先前PlanRunner整合時漏改的地方）**：
+
+1. **`action_result`事件格式對不上，會直接丟`KeyError`崩潰**：之前把`handle_utterance()`改成用`PlanRunner`之後，`action_result`事件的內容從`{"call":..., "result":...}`改成`{"history":..., "summary":...}`，但`run_live()`裡的`on_event`（一般語音路徑實際在用的那份）跟`test_live_state_writing.py`（測試檔案裡另外複製的一份）都還在用舊格式的`e["result"]`——這代表**如果真的接麥克風講一句話讓desktop_control執行完，程式會直接當掉**，只是因為單元測試都是直接呼叫`handle_utterance()`帶自訂`on_event`，沒有走過`run_live()`這條路徑，所以先前的回歸測試都沒抓到。已修正兩處。
+2. **`stopped_by_voice`事件完全沒有對應的UI更新**：使用者講「停止」之後，`live_state.json`會停在講「停止」之前的狀態，畫面上完全沒有任何反應——使用者會搞不清楚指令到底有沒有生效。已補上，講完「停止」後畫面會正確顯示「好，已經取消了」。
+
 ## 補測2項KPI：工具執行成功率、ASR→Tool決策延遲（對照 docs/07 進度報告第9節）
 
 利用上面Logging補上的`duration_ms`資料，寫了`progress/p4_kpi_measurement/run_kpi_test.py`跑20句涵蓋17個已實作工具的真實指令（完整方法論見該資料夾`REPORT.md`）：**工具執行成功率100%**（目標≥98%）、**ASR→Tool決策延遲p95 1.13秒**（目標<2秒，量測時刻意把工具本身執行時間跟LLM決策時間分開算，避免例如「唸一句話要花多久」這種跟延遲無關的時間污染數字）。8項KPI裡目前4項有正式數字，剩下的喚醒詞8小時誤觸發率需要真的連續監聽8小時，是唯一需要長時間背景執行才能測的一項，留到之後有更長時間窗口再處理。

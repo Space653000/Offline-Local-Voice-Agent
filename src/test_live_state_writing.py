@@ -27,6 +27,8 @@ state.update("idle", "待命中，說「嗨小助理」開始")
 state_snapshots = [json.loads(LIVE_STATE_FILE.read_text(encoding="utf-8"))]
 
 def on_event(e):
+    # 這裡故意跟 run_live() 裡的 on_event 邏輯保持一致（對照 docs/07 進度報告，之前兩邊各自
+    # 維護一份，run_live() 改了PlanRunner事件格式但這裡沒跟著改，導致這個測試沒抓到真實bug）。
     et = e.get("type")
     if et == "wake_detected":
         state.update("wake_detected", "我聽到你了！")
@@ -36,10 +38,15 @@ def on_event(e):
         state.update("thinking", "我在想...")
     elif et == "asr_result":
         state.update("thinking", "我在想...", transcript=e["text"])
+    elif et == "executing":
+        state.update("executing", "正在執行你的指令...")
     elif et == "action_result":
-        r = e["result"]
-        msg = r.get("result") if isinstance(r, dict) and r.get("executed") else "完成了"
+        msg = e.get("summary") or e.get("error") or "完成了"
         state.update("idle", "待命中，說「嗨小助理」開始", response=str(msg))
+    elif et == "needs_confirmation":
+        state.update("waiting_confirmation", f"這個動作需要確認：{e['reason']}")
+    elif et == "stopped_by_voice":
+        state.update("idle", "好，已經取消了，說「嗨小助理」重新開始")
     state_snapshots.append(json.loads(LIVE_STATE_FILE.read_text(encoding="utf-8")))
 
 loop = ListenLoop(on_event=on_event)
