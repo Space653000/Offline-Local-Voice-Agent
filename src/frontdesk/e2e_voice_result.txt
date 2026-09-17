@@ -1,0 +1,83 @@
+ASR輸入文字: 我的筆記型電腦喇叭低頻聲音好像突然變差了聽起來悶悶的
+
+=== MODE_CLASSIFY ===
+{
+  "mode": "acoustic_engineering"
+}
+
+=== S1->S2 DIVERGE ===
+{
+  "state": "DIVERGE",
+  "question": "這個問題比較接近哪個方向？（可複選，或選不確定讓AERIS判斷）",
+  "options": [
+    "Driver異常",
+    "腔體共振",
+    "漏氣",
+    "熱壓縮",
+    "量測誤差",
+    "不確定，讓AERIS自動判斷"
+  ]
+}
+
+=== S3->S4 EVIDENCE ===
+{
+  "state": "EVIDENCE",
+  "question": "你目前有哪些量測資料？",
+  "options": [
+    "FR",
+    "THD",
+    "Impedance",
+    "Klippel",
+    "CAD",
+    "Golden sample",
+    "不確定"
+  ]
+}
+
+=== S4->S5/S6 PREVIEW ===
+{
+  "state": "PREVIEW",
+  "summary": {
+    "product": "notebook",
+    "user_goal": "他的筆記型電腦喇叭低頻聲音好像突然變差了，聽起來悶悶的。",
+    "direction": "Driver異常",
+    "evidence": [
+      "FR",
+      "Impedance"
+    ],
+    "pod": [
+      [
+        "020",
+        "Transducer Reliability Engineer"
+      ],
+      [
+        "021",
+        "Enclosure Engineer"
+      ],
+      [
+        "022",
+        "Port/Vent Engineer"
+      ],
+      [
+        "026",
+        "Acoustic Path Engineer"
+      ],
+      [
+        "031",
+        "MEMS Microphone Engineer"
+      ],
+      [
+        "041",
+        "Notebook Acoustic Engineer"
+      ]
+    ]
+  },
+  "question": "這樣送給AERIS處理可以嗎？"
+}
+
+=== S7->S8 ORDER_LOCKED (寫進正式交接資料夾) ===
+{
+  "state": "ORDER_LOCKED",
+  "path": "C:\\0_JN1_AERIS_HANDOFF\\orders\\AERIS-20260916-220047_ORDER.md"
+}
+

@@ -1,0 +1,933 @@
+{
+  "accuracy": 0.7864077669902912,
+  "n": 103,
+  "results": [
+    {
+      "idx": 1,
+      "sentence": "打開瀏覽器",
+      "expected": "open_app",
+      "predicted": "open_app",
+      "ok": true,
+      "elapsed_s": 0.629,
+      "raw": "{\n  \"tool\": \"open_app\",\n  \"args\": {\n    \"app_name\": \"瀏覽器\"\n  }\n}"
+    },
+    {
+      "idx": 2,
+      "sentence": "打開小算盤",
+      "expected": "open_app",
+      "predicted": "calculator",
+      "ok": false,
+      "elapsed_s": 0.346,
+      "raw": "{\n  \"tool\": \"calculator\",\n  \"args\": {}\n}"
+    },
+    {
+      "idx": 3,
+      "sentence": "關掉這個視窗",
+      "expected": "close_window",
+      "predicted": "close_window",
+      "ok": true,
+      "elapsed_s": 0.268,
+      "raw": "{\n  \"tool\": \"close_window\"\n}"
+    },
+    {
+      "idx": 4,
+      "sentence": "把音量調大一點",
+      "expected": "set_volume",
+      "predicted": "set_volume",
+      "ok": true,
+      "elapsed_s": 0.572,
+      "raw": "{\n  \"tool\": \"set_volume\",\n  \"args\": {\n    \"direction\": \"up\"\n  }\n}"
+    },
+    {
+      "idx": 5,
+      "sentence": "把音量調小一點",
+      "expected": "set_volume",
+      "predicted": "set_volume",
+      "ok": true,
+      "elapsed_s": 0.574,
+      "raw": "{\n  \"tool\": \"set_volume\",\n  \"args\": {\n    \"volume_level\": \"lower\"\n  }\n}"
+    },
+    {
+      "idx": 6,
+      "sentence": "現在幾點",
+      "expected": "get_datetime",
+      "predicted": "get_datetime",
+      "ok": true,
+      "elapsed_s": 0.281,
+      "raw": "{\n  \"tool\": \"get_datetime\"\n}"
+    },
+    {
+      "idx": 7,
+      "sentence": "今天星期幾",
+      "expected": "get_datetime",
+      "predicted": "get_datetime",
+      "ok": true,
+      "elapsed_s": 0.602,
+      "raw": "{\n  \"tool\": \"get_datetime\",\n  \"args\": {\n    \"action\": \"get_weekday\"\n  }\n}"
+    },
+    {
+      "idx": 8,
+      "sentence": "明天天氣怎麼樣",
+      "expected": "get_weather",
+      "predicted": "get_weather",
+      "ok": true,
+      "elapsed_s": 0.565,
+      "raw": "{\n  \"tool\": \"get_weather\",\n  \"args\": {\n    \"date\": \"明天\"\n  }\n}"
+    },
+    {
+      "idx": 9,
+      "sentence": "幫我開啟檔案總管",
+      "expected": "open_app",
+      "predicted": "file_op",
+      "ok": false,
+      "elapsed_s": 0.557,
+      "raw": "{\n  \"tool\": \"file_op\",\n  \"args\": {\n    \"action\": \"open\"\n  }\n}"
+    },
+    {
+      "idx": 10,
+      "sentence": "幫我搜尋這台電腦裡的文件",
+      "expected": "file_op",
+      "predicted": "cloud_file_op",
+      "ok": false,
+      "elapsed_s": 0.584,
+      "raw": "{\n  \"tool\": \"cloud_file_op\",\n  \"args\": {\n    \"operation\": \"search\"\n  }\n}"
+    },
+    {
+      "idx": 11,
+      "sentence": "把螢幕亮度調高",
+      "expected": "adjust_brightness",
+      "predicted": "adjust_brightness",
+      "ok": true,
+      "elapsed_s": 0.548,
+      "raw": "{\n  \"tool\": \"adjust_brightness\",\n  \"args\": {\n    \"direction\": \"up\"\n  }\n}"
+    },
+    {
+      "idx": 12,
+      "sentence": "把螢幕亮度調低",
+      "expected": "adjust_brightness",
+      "predicted": "adjust_brightness",
+      "ok": true,
+      "elapsed_s": 0.563,
+      "raw": "{\n  \"tool\": \"adjust_brightness\",\n  \"args\": {\n    \"brightness_level\": \"lower\"\n  }\n}"
+    },
+    {
+      "idx": 13,
+      "sentence": "截圖一下這個畫面",
+      "expected": "take_screenshot",
+      "predicted": "take_screenshot",
+      "ok": true,
+      "elapsed_s": 0.414,
+      "raw": "{\n  \"tool\": \"take_screenshot\",\n  \"args\": {}\n}"
+    },
+    {
+      "idx": 14,
+      "sentence": "複製這段文字",
+      "expected": "clipboard_op",
+      "predicted": "clipboard_op",
+      "ok": true,
+      "elapsed_s": 0.565,
+      "raw": "{\n  \"tool\": \"clipboard_op\",\n  \"args\": {\n    \"operation\": \"copy\"\n  }\n}"
+    },
+    {
+      "idx": 15,
+      "sentence": "貼上到這個欄位",
+      "expected": "clipboard_op",
+      "predicted": "clipboard_op",
+      "ok": true,
+      "elapsed_s": 0.56,
+      "raw": "{\n  \"tool\": \"clipboard_op\",\n  \"args\": {\n    \"operation\": \"paste\"\n  }\n}"
+    },
+    {
+      "idx": 16,
+      "sentence": "刪除這個檔案",
+      "expected": "file_op",
+      "predicted": "file_op",
+      "ok": true,
+      "elapsed_s": 0.569,
+      "raw": "{\n  \"tool\": \"file_op\",\n  \"args\": {\n    \"operation\": \"delete\"\n  }\n}"
+    },
+    {
+      "idx": 17,
+      "sentence": "把這個資料夾重新命名",
+      "expected": "file_op",
+      "predicted": "file_op",
+      "ok": true,
+      "elapsed_s": 0.818,
+      "raw": "{\n  \"tool\": \"file_op\",\n  \"args\": {\n    \"operation\": \"rename\",\n    \"path\": \"当前选中的资料夹路径\"\n  }\n}"
+    },
+    {
+      "idx": 18,
+      "sentence": "建立一個新的資料夾",
+      "expected": "file_op",
+      "predicted": "file_op",
+      "ok": true,
+      "elapsed_s": 0.583,
+      "raw": "{\n  \"tool\": \"file_op\",\n  \"args\": {\n    \"operation\": \"create_folder\"\n  }\n}"
+    },
+    {
+      "idx": 19,
+      "sentence": "切換到下一個視窗",
+      "expected": "window_op",
+      "predicted": "window_op",
+      "ok": true,
+      "elapsed_s": 0.566,
+      "raw": "{\n  \"tool\": \"window_op\",\n  \"args\": {\n    \"action\": \"next\"\n  }\n}"
+    },
+    {
+      "idx": 20,
+      "sentence": "最小化所有視窗",
+      "expected": "window_op",
+      "predicted": "window_op",
+      "ok": true,
+      "elapsed_s": 0.613,
+      "raw": "{\n  \"tool\": \"window_op\",\n  \"args\": {\n    \"action\": \"minimize_all\"\n  }\n}"
+    },
+    {
+      "idx": 21,
+      "sentence": "把這個視窗放到全螢幕",
+      "expected": "window_op",
+      "predicted": "window_op",
+      "ok": true,
+      "elapsed_s": 0.565,
+      "raw": "{\n  \"tool\": \"window_op\",\n  \"args\": {\n    \"action\": \"fullscreen\"\n  }\n}"
+    },
+    {
+      "idx": 22,
+      "sentence": "關閉所有正在執行的程式",
+      "expected": "window_op",
+      "predicted": "power_op",
+      "ok": false,
+      "elapsed_s": 0.573,
+      "raw": "{\n  \"tool\": \"power_op\",\n  \"args\": {\n    \"action\": \"shutdown_apps\"\n  }\n}"
+    },
+    {
+      "idx": 23,
+      "sentence": "重新啟動電腦",
+      "expected": "power_op",
+      "predicted": "power_op",
+      "ok": true,
+      "elapsed_s": 0.571,
+      "raw": "{\n  \"tool\": \"power_op\",\n  \"args\": {\n    \"action\": \"restart\"\n  }\n}"
+    },
+    {
+      "idx": 24,
+      "sentence": "把電腦關機",
+      "expected": "power_op",
+      "predicted": "power_op",
+      "ok": true,
+      "elapsed_s": 0.566,
+      "raw": "{\n  \"tool\": \"power_op\",\n  \"args\": {\n    \"action\": \"shutdown\"\n  }\n}"
+    },
+    {
+      "idx": 25,
+      "sentence": "讓電腦進入休眠模式",
+      "expected": "power_op",
+      "predicted": "power_op",
+      "ok": true,
+      "elapsed_s": 0.55,
+      "raw": "{\n  \"tool\": \"power_op\",\n  \"args\": {\n    \"action\": \"sleep\"\n  }\n}"
+    },
+    {
+      "idx": 26,
+      "sentence": "打開設定",
+      "expected": "open_app",
+      "predicted": "open_app",
+      "ok": true,
+      "elapsed_s": 0.404,
+      "raw": "{\"tool\": \"open_app\", \"args\": {\"app_name\": \"設定\"}}"
+    },
+    {
+      "idx": 27,
+      "sentence": "打開控制台",
+      "expected": "open_app",
+      "predicted": "dev_tool_op",
+      "ok": false,
+      "elapsed_s": 0.603,
+      "raw": "{\n  \"tool\": \"dev_tool_op\",\n  \"args\": {\n    \"action\": \"open_console\"\n  }\n}"
+    },
+    {
+      "idx": 28,
+      "sentence": "打開工作管理員",
+      "expected": "open_app",
+      "predicted": "task_scheduler_op",
+      "ok": false,
+      "elapsed_s": 0.588,
+      "raw": "{\n  \"tool\": \"task_scheduler_op\",\n  \"args\": {\n    \"action\": \"open\"\n  }\n}"
+    },
+    {
+      "idx": 29,
+      "sentence": "查看目前的網路連線狀態",
+      "expected": "network_toggle",
+      "predicted": "network_toggle",
+      "ok": true,
+      "elapsed_s": 0.552,
+      "raw": "{\n  \"tool\": \"network_toggle\",\n  \"args\": {\n    \"action\": \"check\"\n  }\n}"
+    },
+    {
+      "idx": 30,
+      "sentence": "把 Wi-Fi 關掉",
+      "expected": "network_toggle",
+      "predicted": "power_op",
+      "ok": false,
+      "elapsed_s": 0.589,
+      "raw": "{\n  \"tool\": \"power_op\",\n  \"args\": {\n    \"operation\": \"disable_wifi\"\n  }\n}"
+    },
+    {
+      "idx": 31,
+      "sentence": "把 Wi-Fi 打開",
+      "expected": "network_toggle",
+      "predicted": "network_toggle",
+      "ok": true,
+      "elapsed_s": 0.687,
+      "raw": "{\n  \"tool\": \"network_toggle\",\n  \"args\": {\n    \"action\": \"open\",\n    \"type\": \"wifi\"\n  }\n}"
+    },
+    {
+      "idx": 32,
+      "sentence": "把藍牙打開",
+      "expected": "network_toggle",
+      "predicted": "power_op",
+      "ok": false,
+      "elapsed_s": 0.762,
+      "raw": "{\n  \"tool\": \"power_op\",\n  \"args\": {\n    \"operation\": \"turn_on\",\n    \"device\": \"bluetooth\"\n  }\n}"
+    },
+    {
+      "idx": 33,
+      "sentence": "把藍牙關掉",
+      "expected": "network_toggle",
+      "predicted": "power_op",
+      "ok": false,
+      "elapsed_s": 0.599,
+      "raw": "{\n  \"tool\": \"power_op\",\n  \"args\": {\n    \"action\": \"disable_bluetooth\"\n  }\n}"
+    },
+    {
+      "idx": 34,
+      "sentence": "播放這首音樂",
+      "expected": "media_control",
+      "predicted": "media_control",
+      "ok": true,
+      "elapsed_s": 0.725,
+      "raw": "{\n  \"tool\": \"media_control\",\n  \"args\": {\n    \"action\": \"play\",\n    \"media_type\": \"music\"\n  }\n}"
+    },
+    {
+      "idx": 35,
+      "sentence": "暫停音樂",
+      "expected": "media_control",
+      "predicted": "media_control",
+      "ok": true,
+      "elapsed_s": 0.577,
+      "raw": "{\n  \"tool\": \"media_control\",\n  \"args\": {\n    \"action\": \"pause\"\n  }\n}"
+    },
+    {
+      "idx": 36,
+      "sentence": "下一首歌",
+      "expected": "media_control",
+      "predicted": "media_control",
+      "ok": true,
+      "elapsed_s": 0.567,
+      "raw": "{\n  \"tool\": \"media_control\",\n  \"args\": {\n    \"action\": \"next\"\n  }\n}"
+    },
+    {
+      "idx": 37,
+      "sentence": "上一首歌",
+      "expected": "media_control",
+      "predicted": "media_control",
+      "ok": true,
+      "elapsed_s": 0.567,
+      "raw": "{\n  \"tool\": \"media_control\",\n  \"args\": {\n    \"action\": \"previous\"\n  }\n}"
+    },
+    {
+      "idx": 38,
+      "sentence": "把音樂靜音",
+      "expected": "media_control",
+      "predicted": "media_control",
+      "ok": true,
+      "elapsed_s": 0.584,
+      "raw": "{\n  \"tool\": \"media_control\",\n  \"args\": {\n    \"action\": \"mute\"\n  }\n}"
+    },
+    {
+      "idx": 39,
+      "sentence": "打開行事曆",
+      "expected": "open_app",
+      "predicted": "calendar_op",
+      "ok": false,
+      "elapsed_s": 0.57,
+      "raw": "{\n  \"tool\": \"calendar_op\",\n  \"args\": {\n    \"action\": \"open\"\n  }\n}"
+    },
+    {
+      "idx": 40,
+      "sentence": "新增一個明天下午三點的會議",
+      "expected": "calendar_op",
+      "predicted": "calendar_op",
+      "ok": true,
+      "elapsed_s": 0.992,
+      "raw": "{\n  \"tool\": \"calendar_op\",\n  \"args\": {\n    \"action\": \"add_event\",\n    \"event_time\": \"明天下午三點\",\n    \"event_name\": \"會議\"\n  }\n}"
+    },
+    {
+      "idx": 41,
+      "sentence": "提醒我晚上八點吃藥",
+      "expected": "reminder_op",
+      "predicted": "reminder_op",
+      "ok": true,
+      "elapsed_s": 0.823,
+      "raw": "{\n  \"tool\": \"reminder_op\",\n  \"args\": {\n    \"time\": \"20:00\",\n    \"reminder\": \"吃藥\"\n  }\n}"
+    },
+    {
+      "idx": 42,
+      "sentence": "幫我記錄一下今天的待辦事項",
+      "expected": "reminder_op",
+      "predicted": "task_scheduler_op",
+      "ok": false,
+      "elapsed_s": 0.744,
+      "raw": "{\n  \"tool\": \"task_scheduler_op\",\n  \"args\": {\n    \"action\": \"record\",\n    \"type\": \"todo\"\n  }\n}"
+    },
+    {
+      "idx": 43,
+      "sentence": "把這份文件另存成 PDF",
+      "expected": "file_op",
+      "predicted": "file_op",
+      "ok": true,
+      "elapsed_s": 0.611,
+      "raw": "{\n  \"tool\": \"file_op\",\n  \"args\": {\n    \"operation\": \"save_as_pdf\"\n  }\n}"
+    },
+    {
+      "idx": 44,
+      "sentence": "列印這份文件",
+      "expected": "print_or_scan",
+      "predicted": "print_or_scan",
+      "ok": true,
+      "elapsed_s": 0.595,
+      "raw": "{\n  \"tool\": \"print_or_scan\",\n  \"args\": {\n    \"operation\": \"print\"\n  }\n}"
+    },
+    {
+      "idx": 45,
+      "sentence": "掃描這份文件",
+      "expected": "print_or_scan",
+      "predicted": "print_or_scan",
+      "ok": true,
+      "elapsed_s": 0.599,
+      "raw": "{\n  \"tool\": \"print_or_scan\",\n  \"args\": {\n    \"operation\": \"scan\"\n  }\n}"
+    },
+    {
+      "idx": 46,
+      "sentence": "把這張照片編輯一下",
+      "expected": "photo_edit",
+      "predicted": "photo_edit",
+      "ok": true,
+      "elapsed_s": 0.293,
+      "raw": "{\n  \"tool\": \"photo_edit\"\n}"
+    },
+    {
+      "idx": 47,
+      "sentence": "把這張照片旋轉九十度",
+      "expected": "photo_edit",
+      "predicted": "photo_edit",
+      "ok": true,
+      "elapsed_s": 0.748,
+      "raw": "{\n  \"tool\": \"photo_edit\",\n  \"args\": {\n    \"operation\": \"rotate\",\n    \"degrees\": 90\n  }\n}"
+    },
+    {
+      "idx": 48,
+      "sentence": "放大這張圖片",
+      "expected": "photo_edit",
+      "predicted": "photo_edit",
+      "ok": true,
+      "elapsed_s": 0.403,
+      "raw": "{\"tool\": \"photo_edit\", \"args\": {\"operation\": \"放大\"}}"
+    },
+    {
+      "idx": 49,
+      "sentence": "縮小這張圖片",
+      "expected": "photo_edit",
+      "predicted": "photo_edit",
+      "ok": true,
+      "elapsed_s": 0.793,
+      "raw": "{\n  \"tool\": \"photo_edit\",\n  \"args\": {\n    \"operation\": \"缩放\",\n    \"action\": \"缩小\"\n  }\n}"
+    },
+    {
+      "idx": 50,
+      "sentence": "打開記事本",
+      "expected": "open_app",
+      "predicted": "text_input_op",
+      "ok": false,
+      "elapsed_s": 2.03,
+      "raw": "{\n  \"tool\": \"text_input_op\",\n  \"args\": {\n    \"action\": \"open\",\n    \"application\": \"記事本\"\n  }\n}"
+    },
+    {
+      "idx": 51,
+      "sentence": "輸入一段文字",
+      "expected": "text_input_op",
+      "predicted": "text_input_op",
+      "ok": true,
+      "elapsed_s": 0.655,
+      "raw": "{ \"tool\": \"text_input_op\" }"
+    },
+    {
+      "idx": 52,
+      "sentence": "把這段文字轉成語音",
+      "expected": "text_to_speech_op",
+      "predicted": "text_to_speech_op",
+      "ok": true,
+      "elapsed_s": 1.187,
+      "raw": "{\n  \"tool\": \"text_to_speech_op\",\n  \"args\": {}\n}"
+    },
+    {
+      "idx": 53,
+      "sentence": "把這段語音轉成文字",
+      "expected": "speech_to_text_op",
+      "predicted": "speech_to_text_op",
+      "ok": true,
+      "elapsed_s": 0.8,
+      "raw": "{\n  \"tool\": \"speech_to_text_op\"\n}"
+    },
+    {
+      "idx": 54,
+      "sentence": "翻譯這句話成英文",
+      "expected": "translate",
+      "predicted": "translate",
+      "ok": true,
+      "elapsed_s": 1.926,
+      "raw": "{\n  \"tool\": \"translate\",\n  \"args\": {\n    \"text\": \"這句話\",\n    \"target_language\": \"en\"\n  }\n}"
+    },
+    {
+      "idx": 55,
+      "sentence": "翻譯這句話成日文",
+      "expected": "translate",
+      "predicted": "translate",
+      "ok": true,
+      "elapsed_s": 1.929,
+      "raw": "{\n  \"tool\": \"translate\",\n  \"args\": {\n    \"text\": \"這句話\",\n    \"target_language\": \"日语\"\n  }\n}"
+    },
+    {
+      "idx": 56,
+      "sentence": "查一下今天的匯率",
+      "expected": "get_exchange_rate",
+      "predicted": "get_exchange_rate",
+      "ok": true,
+      "elapsed_s": 1.075,
+      "raw": "{\n  \"tool\": \"get_exchange_rate\",\n  \"args\": {}\n}"
+    },
+    {
+      "idx": 57,
+      "sentence": "查一下明天的天氣預報",
+      "expected": "get_weather",
+      "predicted": "get_weather",
+      "ok": true,
+      "elapsed_s": 1.466,
+      "raw": "{\n  \"tool\": \"get_weather\",\n  \"args\": {\n    \"date\": \"明天\"\n  }\n}"
+    },
+    {
+      "idx": 58,
+      "sentence": "幫我訂一個明天早上九點的鬧鐘",
+      "expected": "alarm_op",
+      "predicted": "alarm_op",
+      "ok": true,
+      "elapsed_s": 2.804,
+      "raw": "{\n  \"tool\": \"alarm_op\",\n  \"args\": {\n    \"action\": \"set\",\n    \"time\": \"2023-10-10T09:00:00\"\n  }\n}"
+    },
+    {
+      "idx": 59,
+      "sentence": "關掉這個鬧鐘",
+      "expected": "alarm_op",
+      "predicted": "alarm_op",
+      "ok": true,
+      "elapsed_s": 1.558,
+      "raw": "{\n  \"tool\": \"alarm_op\",\n  \"args\": {\n    \"action\": \"disable\"\n  }\n}"
+    },
+    {
+      "idx": 60,
+      "sentence": "延後十分鐘再提醒我",
+      "expected": "alarm_op",
+      "predicted": "alarm_op",
+      "ok": true,
+      "elapsed_s": 1.945,
+      "raw": "{\n  \"tool\": \"alarm_op\",\n  \"args\": {\n    \"action\": \"delay\",\n    \"time\": 600\n  }\n}"
+    },
+    {
+      "idx": 61,
+      "sentence": "打開計算機幫我算一下三加五乘二",
+      "expected": "calculator",
+      "predicted": "calculator",
+      "ok": true,
+      "elapsed_s": 1.679,
+      "raw": "{\n  \"tool\": \"calculator\",\n  \"args\": {\n    \"expression\": \"3 + 5 * 2\"\n  }\n}"
+    },
+    {
+      "idx": 62,
+      "sentence": "幫我把這個檔案上傳到雲端",
+      "expected": "cloud_file_op",
+      "predicted": "cloud_file_op",
+      "ok": true,
+      "elapsed_s": 1.517,
+      "raw": "{\n  \"tool\": \"cloud_file_op\",\n  \"args\": {\n    \"operation\": \"upload\"\n  }\n}"
+    },
+    {
+      "idx": 63,
+      "sentence": "把這個檔案下載下來",
+      "expected": "cloud_file_op",
+      "predicted": "file_op",
+      "ok": false,
+      "elapsed_s": 1.537,
+      "raw": "{\n  \"tool\": \"file_op\",\n  \"args\": {\n    \"operation\": \"download\"\n  }\n}"
+    },
+    {
+      "idx": 64,
+      "sentence": "分享這個檔案給我的同事",
+      "expected": "cloud_file_op",
+      "predicted": "cloud_file_op",
+      "ok": true,
+      "elapsed_s": 2.682,
+      "raw": "{\n  \"tool\": \"cloud_file_op\",\n  \"args\": {\n    \"operation\": \"share\",\n    \"file_id\": \"特定檔案的識別碼\",\n    \"recipients\": [\"同事的電子郵件地址\"]\n  }\n}"
+    },
+    {
+      "idx": 65,
+      "sentence": "打開電子郵件收信",
+      "expected": "email_op",
+      "predicted": "email_op",
+      "ok": true,
+      "elapsed_s": 1.251,
+      "raw": "{ \"tool\": \"email_op\", \"args\": { \"operation\": \"收信\" } }"
+    },
+    {
+      "idx": 66,
+      "sentence": "寄一封信給客戶",
+      "expected": "email_op",
+      "predicted": "email_op",
+      "ok": true,
+      "elapsed_s": 1.877,
+      "raw": "{\n  \"tool\": \"email_op\",\n  \"args\": {\n    \"action\": \"send\",\n    \"recipient\": \"客户\"\n  }\n}"
+    },
+    {
+      "idx": 67,
+      "sentence": "回覆這封郵件",
+      "expected": "email_op",
+      "predicted": "email_op",
+      "ok": true,
+      "elapsed_s": 1.527,
+      "raw": "{\n  \"tool\": \"email_op\",\n  \"args\": {\n    \"action\": \"reply\"\n  }\n}"
+    },
+    {
+      "idx": 68,
+      "sentence": "刪除這封垃圾郵件",
+      "expected": "email_op",
+      "predicted": "email_op",
+      "ok": true,
+      "elapsed_s": 1.978,
+      "raw": "{\n  \"tool\": \"email_op\",\n  \"args\": {\n    \"action\": \"delete\",\n    \"target\": \"spam_email\"\n  }\n}"
+    },
+    {
+      "idx": 69,
+      "sentence": "打開視訊會議軟體",
+      "expected": "video_call_op",
+      "predicted": "video_call_op",
+      "ok": true,
+      "elapsed_s": 1.627,
+      "raw": "{\n  \"tool\": \"video_call_op\",\n  \"args\": {\n    \"action\": \"open\"\n  }\n}"
+    },
+    {
+      "idx": 70,
+      "sentence": "開始錄影這個畫面",
+      "expected": "record_screen",
+      "predicted": "record_screen",
+      "ok": true,
+      "elapsed_s": 1.101,
+      "raw": "{\n  \"tool\": \"record_screen\",\n  \"args\": {}\n}"
+    },
+    {
+      "idx": 71,
+      "sentence": "停止錄影",
+      "expected": "record_screen",
+      "predicted": "record_screen",
+      "ok": true,
+      "elapsed_s": 1.693,
+      "raw": "{\n  \"tool\": \"record_screen\",\n  \"args\": {\n    \"action\": \"stop\"\n  }\n}"
+    },
+    {
+      "idx": 72,
+      "sentence": "把錄影檔案儲存到桌面",
+      "expected": "file_op",
+      "predicted": "cloud_file_op",
+      "ok": false,
+      "elapsed_s": 2.325,
+      "raw": "{\n  \"tool\": \"cloud_file_op\",\n  \"args\": {\n    \"operation\": \"save\",\n    \"file_type\": \"video\",\n    \"destination\": \"桌面\"\n  }\n}"
+    },
+    {
+      "idx": 73,
+      "sentence": "打開瀏覽器搜尋台北天氣",
+      "expected": "open_app",
+      "predicted": "open_app",
+      "ok": true,
+      "elapsed_s": 1.92,
+      "raw": "{\n  \"tool\": \"open_app\",\n  \"args\": {\n    \"app_name\": \"瀏覽器\"\n  }\n}"
+    },
+    {
+      "idx": 74,
+      "sentence": "打開瀏覽器搜尋最新的科技新聞",
+      "expected": "open_app",
+      "predicted": "open_app",
+      "ok": true,
+      "elapsed_s": 1.644,
+      "raw": "{\n  \"tool\": \"open_app\",\n  \"args\": {\n    \"app_name\": \"瀏覽器\"\n  }\n}"
+    },
+    {
+      "idx": 75,
+      "sentence": "關掉背景音樂",
+      "expected": "media_control",
+      "predicted": "media_control",
+      "ok": true,
+      "elapsed_s": 1.553,
+      "raw": "{\n  \"tool\": \"media_control\",\n  \"args\": {\n    \"action\": \"mute\"\n  }\n}"
+    },
+    {
+      "idx": 76,
+      "sentence": "把系統音量設定成百分之五十",
+      "expected": "set_volume",
+      "predicted": "set_volume",
+      "ok": true,
+      "elapsed_s": 1.634,
+      "raw": "{\n  \"tool\": \"set_volume\",\n  \"args\": {\n    \"volume_level\": 50\n  }\n}"
+    },
+    {
+      "idx": 77,
+      "sentence": "檢查電腦有沒有更新",
+      "expected": "system_maintenance",
+      "predicted": "system_maintenance",
+      "ok": true,
+      "elapsed_s": 0.442,
+      "raw": "{\"tool\": \"system_maintenance\"}"
+    },
+    {
+      "idx": 78,
+      "sentence": "安裝最新的系統更新",
+      "expected": "system_maintenance",
+      "predicted": "system_maintenance",
+      "ok": true,
+      "elapsed_s": 0.811,
+      "raw": "{\"tool\": \"system_maintenance\", \"args\": {\"action\": \"install_update\"}}"
+    },
+    {
+      "idx": 79,
+      "sentence": "掃描電腦有沒有病毒",
+      "expected": "system_maintenance",
+      "predicted": "driver_op",
+      "ok": false,
+      "elapsed_s": 1.148,
+      "raw": "{\n  \"tool\": \"driver_op\",\n  \"args\": {\n    \"action\": \"scan_virus\"\n  }\n}"
+    },
+    {
+      "idx": 80,
+      "sentence": "清理電腦裡的垃圾檔案",
+      "expected": "system_maintenance",
+      "predicted": "cloud_file_op",
+      "ok": false,
+      "elapsed_s": 1.192,
+      "raw": "{\n  \"tool\": \"cloud_file_op\",\n  \"args\": {\n    \"operation\": \"clean_trash\"\n  }\n}"
+    },
+    {
+      "idx": 81,
+      "sentence": "查看硬碟還有多少空間",
+      "expected": "system_maintenance",
+      "predicted": "cloud_file_op",
+      "ok": false,
+      "elapsed_s": 1.193,
+      "raw": "{\n  \"tool\": \"cloud_file_op\",\n  \"args\": {\n    \"action\": \"check_disk_space\"\n  }\n}"
+    },
+    {
+      "idx": 82,
+      "sentence": "打開任務排程器",
+      "expected": "open_app",
+      "predicted": "task_scheduler_op",
+      "ok": false,
+      "elapsed_s": 1.074,
+      "raw": "{\n  \"tool\": \"task_scheduler_op\",\n  \"args\": {\n    \"action\": \"open\"\n  }\n}"
+    },
+    {
+      "idx": 83,
+      "sentence": "新增一個排程任務",
+      "expected": "task_scheduler_op",
+      "predicted": "task_scheduler_op",
+      "ok": true,
+      "elapsed_s": 1.087,
+      "raw": "{\n  \"tool\": \"task_scheduler_op\",\n  \"args\": {\n    \"action\": \"add\"\n  }\n}"
+    },
+    {
+      "idx": 84,
+      "sentence": "把這個程式加到開機自動啟動",
+      "expected": "startup_program_op",
+      "predicted": "startup_program_op",
+      "ok": true,
+      "elapsed_s": 1.577,
+      "raw": "{\n  \"tool\": \"startup_program_op\",\n  \"args\": {\n    \"action\": \"add\",\n    \"program_path\": \"需要指定程式的路徑\"\n  }\n}"
+    },
+    {
+      "idx": 85,
+      "sentence": "移除這個開機自動啟動的程式",
+      "expected": "startup_program_op",
+      "predicted": "startup_program_op",
+      "ok": true,
+      "elapsed_s": 1.64,
+      "raw": "{\n  \"tool\": \"startup_program_op\",\n  \"args\": {\n    \"action\": \"remove\",\n    \"program_name\": \"這個開機自動啟動的程式\"\n  }\n}"
+    },
+    {
+      "idx": 86,
+      "sentence": "打開裝置管理員",
+      "expected": "open_app",
+      "predicted": "startup_program_op",
+      "ok": false,
+      "elapsed_s": 1.099,
+      "raw": "{\n  \"tool\": \"startup_program_op\",\n  \"args\": {\n    \"program_name\": \"裝置管理員\"\n  }\n}"
+    },
+    {
+      "idx": 87,
+      "sentence": "檢查顯示卡的驅動程式版本",
+      "expected": "driver_op",
+      "predicted": "driver_op",
+      "ok": true,
+      "elapsed_s": 1.243,
+      "raw": "{\n  \"tool\": \"driver_op\",\n  \"args\": {\n    \"action\": \"check\",\n    \"device_type\": \"graphics_card\"\n  }\n}"
+    },
+    {
+      "idx": 88,
+      "sentence": "更新顯示卡驅動程式",
+      "expected": "driver_op",
+      "predicted": "driver_op",
+      "ok": true,
+      "elapsed_s": 1.224,
+      "raw": "{\n  \"tool\": \"driver_op\",\n  \"args\": {\n    \"action\": \"update\",\n    \"device_type\": \"graphics_card\"\n  }\n}"
+    },
+    {
+      "idx": 89,
+      "sentence": "打開命令提示字元",
+      "expected": "open_app",
+      "predicted": "open_app",
+      "ok": true,
+      "elapsed_s": 1.057,
+      "raw": "{\n  \"tool\": \"open_app\",\n  \"args\": {\n    \"app_name\": \"命令提示字元\"\n  }\n}"
+    },
+    {
+      "idx": 90,
+      "sentence": "執行這個 PowerShell 指令碼",
+      "expected": "dev_tool_op",
+      "predicted": "dev_tool_op",
+      "ok": true,
+      "elapsed_s": 1.235,
+      "raw": "{\n  \"tool\": \"dev_tool_op\",\n  \"args\": {\n    \"command\": \"執行這個 PowerShell 指令碼\"\n  }\n}"
+    },
+    {
+      "idx": 91,
+      "sentence": "編譯這個程式",
+      "expected": "dev_tool_op",
+      "predicted": "dev_tool_op",
+      "ok": true,
+      "elapsed_s": 1.193,
+      "raw": "{\n  \"tool\": \"dev_tool_op\",\n  \"args\": {\n    \"action\": \"compile\",\n    \"file_path\": \"\"\n  }\n}"
+    },
+    {
+      "idx": 92,
+      "sentence": "執行這個 Python 腳本",
+      "expected": "dev_tool_op",
+      "predicted": "text_input_op",
+      "ok": false,
+      "elapsed_s": 1.834,
+      "raw": "{\n  \"tool\": \"text_input_op\",\n  \"args\": {\n    \"action\": \"execute\",\n    \"file_type\": \"Python\",\n    \"file_path\": \"这个 Python 脚本的路径\"\n  }\n}"
+    },
+    {
+      "idx": 93,
+      "sentence": "打開 Visual Studio Code",
+      "expected": "open_app",
+      "predicted": "open_app",
+      "ok": true,
+      "elapsed_s": 1.075,
+      "raw": "{\n  \"tool\": \"open_app\",\n  \"args\": {\n    \"app_name\": \"Visual Studio Code\"\n  }\n}"
+    },
+    {
+      "idx": 94,
+      "sentence": "在這個資料夾裡建立一個新的文字檔",
+      "expected": "file_op",
+      "predicted": "file_op",
+      "ok": true,
+      "elapsed_s": 1.74,
+      "raw": "{\n  \"tool\": \"file_op\",\n  \"args\": {\n    \"operation\": \"create\",\n    \"file_type\": \"text\",\n    \"path\": \"這個資料夾\"\n  }\n}"
+    },
+    {
+      "idx": 95,
+      "sentence": "把這個 GitHub 專案複製到本機",
+      "expected": "git_op",
+      "predicted": "git_op",
+      "ok": true,
+      "elapsed_s": 1.361,
+      "raw": "{\n  \"tool\": \"git_op\",\n  \"args\": {\n    \"action\": \"clone\",\n    \"url\": \"github_url\"\n  }\n}"
+    },
+    {
+      "idx": 96,
+      "sentence": "提交這次的程式修改",
+      "expected": "git_op",
+      "predicted": "cloud_file_op",
+      "ok": false,
+      "elapsed_s": 1.4,
+      "raw": "{\n  \"tool\": \"cloud_file_op\",\n  \"args\": {\n    \"action\": \"submit\",\n    \"file_type\": \"program\"\n  }\n}"
+    },
+    {
+      "idx": 97,
+      "sentence": "把修改推送到遠端倉庫",
+      "expected": "git_op",
+      "predicted": "git_op",
+      "ok": true,
+      "elapsed_s": 1.116,
+      "raw": "{\n  \"tool\": \"git_op\",\n  \"args\": {\n    \"action\": \"push\"\n  }\n}"
+    },
+    {
+      "idx": 98,
+      "sentence": "查看目前的版本控制紀錄",
+      "expected": "git_op",
+      "predicted": "git_op",
+      "ok": true,
+      "elapsed_s": 0.959,
+      "raw": "{\"tool\": \"git_op\", \"args\": {\"action\": \"查看版本控制紀錄\"}}"
+    },
+    {
+      "idx": 99,
+      "sentence": "切換到另一個分支",
+      "expected": "git_op",
+      "predicted": "git_op",
+      "ok": true,
+      "elapsed_s": 1.238,
+      "raw": "{\n  \"tool\": \"git_op\",\n  \"args\": {\n    \"action\": \"switch_branch\"\n  }\n}"
+    },
+    {
+      "idx": 100,
+      "sentence": "建立一個新的分支",
+      "expected": "git_op",
+      "predicted": "git_op",
+      "ok": true,
+      "elapsed_s": 1.651,
+      "raw": "{\n  \"tool\": \"git_op\",\n  \"args\": {\n    \"action\": \"create_branch\",\n    \"branch_name\": \"new_branch\"\n  }\n}"
+    },
+    {
+      "idx": 101,
+      "sentence": "合併這兩個分支",
+      "expected": "git_op",
+      "predicted": "git_op",
+      "ok": true,
+      "elapsed_s": 1.788,
+      "raw": "{\n  \"tool\": \"git_op\",\n  \"args\": {\n    \"action\": \"merge\",\n    \"branches\": [\"分支1\", \"分支2\"]\n  }\n}"
+    },
+    {
+      "idx": 102,
+      "sentence": "解決這個合併衝突",
+      "expected": "git_op",
+      "predicted": "cloud_file_op",
+      "ok": false,
+      "elapsed_s": 1.398,
+      "raw": "{\n  \"tool\": \"cloud_file_op\",\n  \"args\": {\n    \"operation\": \"resolve_conflict\"\n  }\n}"
+    },
+    {
+      "idx": 103,
+      "sentence": "幫我把這份報告整理成重點摘要",
+      "expected": "summarize_doc",
+      "predicted": "summarize_doc",
+      "ok": true,
+      "elapsed_s": 1.453,
+      "raw": "{\n  \"tool\": \"summarize_doc\",\n  \"args\": {\n    \"document\": \"這份報告\"\n  }\n}"
+    }
+  ]
+}

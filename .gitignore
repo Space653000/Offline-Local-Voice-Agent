@@ -1,0 +1,41 @@
+# P0 驗證用的暫存建置產物與大型測試模型，不進 git
+progress/p0/build/
+progress/p0/venv-arm64/
+progress/p0/*.log
+
+# P1 ASR 選型測試用的音檔（可重新產生，不用進 git）
+progress/p1_asr_bench/wav_raw/
+progress/p1_asr_bench/wav_16k/
+progress/p1_asr_bench/*_debug.txt
+progress/p1_asr_bench/*_stdout.txt
+
+# 主控台執行時期產生的狀態檔，不用進 git
+console/live_state.json
+
+# 語音測試用的合成/錄音音檔跟暫存結果（可重新產生，不用進 git）
+src/*.wav
+src/*_result.txt
+src/*_result.json
+src/mic_check.txt
+progress/p1_wakeword_train/positive/
+progress/p1_wakeword_train/negative/
+progress/p1_wakeword_train/test_positive/
+progress/p1_wakeword_train/*_16k/
+progress/p1_wakeword_train/ambient_neg/
+progress/p1_wakeword_train/_tmp_*
+# 注意：progress/p1_wakeword_train/*.onnx 是訓練過程的中間輸出，可忽略；
+# 但 src/wakeword/*.onnx 是正式要用的成品模型，故意不排除，要進 git
+progress/p1_wakeword_train/*.onnx
+data/voice_agent.db
+
+# 一般開發垃圾
+__pycache__/
+*.pyc
+.venv/
+venv/
+node_modules/
+*.gguf
+*.bin
+
+# 開發過程的暫存 log（伺服器 stdout/stderr、跑測試的輸出），內容可重現、不是要留存的紀錄
+*.log

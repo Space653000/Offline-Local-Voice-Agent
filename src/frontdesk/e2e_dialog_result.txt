@@ -1,0 +1,74 @@
+=== S1->S2 DIVERGE ===
+{
+  "state": "DIVERGE",
+  "question": "這個問題比較接近哪個方向？（可複選，或選不確定讓AERIS判斷）",
+  "options": [
+    "Driver異常",
+    "腔體共振",
+    "密封不良",
+    "電路故障",
+    "熱膨脹",
+    "量測誤差",
+    "不確定，讓AERIS自動判斷"
+  ]
+}
+
+=== S3->S4 EVIDENCE ===
+{
+  "state": "EVIDENCE",
+  "question": "你目前有哪些量測資料？",
+  "options": [
+    "FR",
+    "THD",
+    "Impedance",
+    "Klippel",
+    "CAD",
+    "Golden sample",
+    "不確定"
+  ]
+}
+
+=== S4->S5/S6 PREVIEW ===
+{
+  "state": "PREVIEW",
+  "summary": {
+    "product": "notebook",
+    "user_goal": "筆電的喇叭在低頻時聲音變得很悶悶",
+    "direction": "Driver異常",
+    "evidence": [
+      "FR",
+      "THD",
+      "Impedance"
+    ],
+    "pod": [
+      [
+        "021",
+        "Enclosure Engineer"
+      ],
+      [
+        "026",
+        "Acoustic Path Engineer"
+      ],
+      [
+        "029",
+        "Speaker Tuning Engineer"
+      ],
+      [
+        "031",
+        "MEMS Microphone Engineer"
+      ],
+      [
+        "041",
+        "Notebook Acoustic Engineer"
+      ]
+    ]
+  },
+  "question": "這樣送給AERIS處理可以嗎？"
+}
+
+=== S7->S8 ORDER_LOCKED ===
+{
+  "state": "ORDER_LOCKED",
+  "path": "C:\\0_JN1_Offline-Local-Voice-Agent\\src\\frontdesk\\test_output\\AERIS-20260916-215401_ORDER.md"
+}
+

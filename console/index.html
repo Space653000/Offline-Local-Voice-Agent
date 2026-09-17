@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>語音代理人主控台</title>
+<style>
+:root{
+  --bg:#f5f6f4; --surface:#ffffff; --surface-2:#eef0ec; --ink:#161a17; --sub:#5c655d; --border:#dde1d9;
+  --accent:#1f7a6c; --accent-ink:#0d3f37; --accent-soft:#e3f0ec;
+  --pass:#2f8f4e; --pass-bg:#e7f5ea; --warn:#b9791a; --warn-bg:#fbf1e0; --fail:#c23b34; --fail-bg:#fbeae8; --idle:#8a8f87; --idle-bg:#eceee9;
+  --shadow: 0 1px 2px rgba(20,25,20,.04), 0 4px 14px rgba(20,25,20,.05);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#12140f; --surface:#1a1d17; --surface-2:#20241d; --ink:#eef1ea; --sub:#a2ab9c; --border:#31362b;
+    --accent:#5cbfa8; --accent-ink:#c9ece2; --accent-soft:#1c342e;
+    --pass:#6fce8c; --pass-bg:#173224; --warn:#e0aa4d; --warn-bg:#3a2c12; --fail:#f0857c; --fail-bg:#3a1c19; --idle:#7d857a; --idle-bg:#232821;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#12140f; --surface:#1a1d17; --surface-2:#20241d; --ink:#eef1ea; --sub:#a2ab9c; --border:#31362b;
+  --accent:#5cbfa8; --accent-ink:#c9ece2; --accent-soft:#1c342e;
+  --pass:#6fce8c; --pass-bg:#173224; --warn:#e0aa4d; --warn-bg:#3a2c12; --fail:#f0857c; --fail-bg:#3a1c19; --idle:#7d857a; --idle-bg:#232821;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html{-webkit-tap-highlight-color:transparent}
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Aptos","Microsoft JhengHei","微軟正黑體",system-ui,sans-serif;
+  font-size:16px;
+  display:flex;min-height:100vh;
+}
+h1,h2,h3{font-family:"Aptos","Microsoft JhengHei","微軟正黑體",system-ui,sans-serif;text-wrap:balance;margin:0}
+::selection{background:var(--accent-soft)}
+a{color:var(--accent)}
+button{font-family:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* ---- topbar ---- */
+.topbar{
+  position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;
+  padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border);
+}
+.topbar .brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:15px;letter-spacing:.01em}
+.topbar .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.topbar .spacer{flex:1}
+.icon-btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  width:38px;height:38px;border-radius:10px;border:1px solid var(--border);background:var(--surface-2);
+  color:var(--ink);cursor:pointer;font-size:14px;font-weight:600;
+}
+.icon-btn.wide{width:auto;padding:0 12px}
+.icon-btn:hover{border-color:var(--accent)}
+#menuToggle{display:none}
+
+/* ---- layout: content | right nav ---- */
+.shell{display:flex;flex:1;min-width:0;flex-direction:column}
+.frame{display:flex;flex:1;min-width:0}
+.content{flex:1;min-width:0;padding:22px 20px 60px;max-width:900px;margin:0 auto;width:100%}
+nav.rail{
+  width:220px;flex:none;border-left:1px solid var(--border);background:var(--surface);
+  padding:18px 14px;position:sticky;top:57px;align-self:flex-start;height:calc(100vh - 57px);overflow-y:auto;
+}
+nav.rail .navlabel{font-size:11px;color:var(--sub);text-transform:uppercase;letter-spacing:.08em;margin:16px 4px 8px}
+nav.rail .navlabel:first-child{margin-top:0}
+nav.rail a{
+  display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:9px;color:var(--ink);
+  text-decoration:none;font-size:13.5px;font-weight:500;
+}
+nav.rail a:hover{background:var(--surface-2)}
+nav.rail a.active{background:var(--accent-soft);color:var(--accent-ink);font-weight:700}
+nav.rail a .chip{margin-left:auto;font-size:10px;padding:2px 6px;border-radius:20px;font-weight:700}
+
+@media (max-width: 860px){
+  nav.rail{
+    position:fixed;right:0;top:0;bottom:0;height:100vh;z-index:30;width:78vw;max-width:300px;
+    transform:translateX(100%);transition:transform .22s ease;box-shadow:var(--shadow);
+  }
+  nav.rail.open{transform:translateX(0)}
+  #menuToggle{display:inline-flex}
+  .content{padding:18px 16px 60px}
+}
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:25;opacity:0;pointer-events:none;transition:opacity .2s}
+.scrim.show{opacity:1;pointer-events:auto}
+
+/* ---- section ---- */
+section{margin-bottom:36px}
+section .sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:4px}
+section h2{font-size:20px;font-weight:800}
+section .sec-sub{color:var(--sub);font-size:14px;margin:2px 0 16px}
+.overall{
+  display:flex;align-items:center;gap:18px;background:var(--surface);border:1px solid var(--border);
+  border-radius:16px;padding:18px 20px;box-shadow:var(--shadow);margin-bottom:8px;
+}
+.overall .ring{width:64px;height:64px;flex:none}
+.overall b{font-size:22px;font-variant-numeric:tabular-nums}
+.overall .label{color:var(--sub);font-size:14px}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.card{
+  background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;box-shadow:var(--shadow);
+}
+.card .card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px}
+.card .card-top b{font-size:14.5px;font-weight:700}
+.pill{font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap;letter-spacing:.01em}
+.pill.pass{background:var(--pass-bg);color:var(--pass)}
+.pill.warn{background:var(--warn-bg);color:var(--warn)}
+.pill.fail{background:var(--fail-bg);color:var(--fail)}
+.pill.idle{background:var(--idle-bg);color:var(--idle)}
+.kv{display:flex;justify-content:space-between;padding:5px 0;border-top:1px dashed var(--border);font-size:14px}
+.kv:first-of-type{border-top:none}
+.kv .k{color:var(--sub)}
+.kv .v{font-variant-numeric:tabular-nums;font-weight:600}
+.note{font-size:12.5px;color:var(--sub);margin-top:10px;line-height:1.6}
+
+.stack{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow)}
+.stack + .stack{margin-top:12px}
+.stack h3{font-size:15px;margin-bottom:10px}
+.stack p{font-size:15px;line-height:1.8;color:var(--ink);margin:0 0 10px}
+.stack p:last-child{margin-bottom:0}
+.term{background:var(--accent-soft);color:var(--accent-ink);border-radius:6px;padding:1px 6px;font-weight:700;font-size:.95em}
+
+table.dbtable{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}
+table.dbtable th,table.dbtable td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--border)}
+table.dbtable th{color:var(--sub);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.03em}
+table.dbtable td.field{font-weight:700;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;color:var(--accent-ink);background:var(--accent-soft);border-radius:6px}
+
+.progressbar{height:8px;border-radius:6px;background:var(--surface-2);overflow:hidden;margin-top:8px}
+.progressbar > i{display:block;height:100%;background:var(--accent);border-radius:6px}
+
+[data-i18n-only]{}
+[lang-en]{display:none}
+:root[data-lang="en"] [lang-zh]{display:none}
+:root[data-lang="en"] [lang-en]{display:inline}
+:root[data-lang="en"] [lang-en-block]{display:block}
+</style>
+</head>
+<body>
+
+<div class="scrim" id="scrim"></div>
+
+<div class="shell">
+  <div class="topbar">
+    <button class="icon-btn" id="menuToggle" aria-label="選單">☰</button>
+    <div class="brand"><span class="dot"></span><span lang-zh>語音代理人主控台</span><span lang-en>Voice Agent Console</span></div>
+    <div class="spacer"></div>
+    <button class="icon-btn wide" id="langToggle"><span lang-zh>EN</span><span lang-en>中文</span></button>
+    <button class="icon-btn" id="themeToggle" aria-label="切換深淺色">🌓</button>
+  </div>
+
+  <div class="frame">
+    <main class="content" id="content">
+
+      <section id="overview">
+        <div class="sec-head"><h2><span lang-zh>總覽</span><span lang-en>Overview</span></h2></div>
+        <p class="sec-sub"><span lang-zh>Offline-Local-Voice-Agent · 100% 離線 · 全部運算在你的 Surface Laptop Ultra 本機完成</span><span lang-en>Offline-Local-Voice-Agent · 100% offline · everything runs locally on your Surface Laptop Ultra</span></p>
+        <div class="overall">
+          <svg class="ring" viewBox="0 0 64 64">
+            <circle cx="32" cy="32" r="27" fill="none" stroke="var(--surface-2)" stroke-width="8"/>
+            <circle cx="32" cy="32" r="27" fill="none" stroke="var(--accent)" stroke-width="8" stroke-linecap="round"
+              stroke-dasharray="169.6" stroke-dashoffset="110" transform="rotate(-90 32 32)"/>
+          </svg>
+          <div>
+            <b>59%</b> <span class="label"><span lang-zh>整體工程進度（P0～P6 共 7 大階段）</span><span lang-en>overall build progress (7 phases, P0–P6)</span></span>
+            <div class="progressbar" style="width:220px"><i style="width:59%"></i></div>
+          </div>
+        </div>
+        <a href="companion.html" style="text-decoration:none">
+          <div class="card" style="margin-top:12px;border-color:var(--accent);display:flex;align-items:center;gap:12px">
+            <div style="font-size:28px">🎙️</div>
+            <div>
+              <b style="font-size:14.5px"><span lang-zh>開啟語音助理即時陪伴介面</span><span lang-en>Open the live voice companion</span></b>
+              <div class="note" style="margin-top:2px" lang-zh>給不熟技術的人用的簡單畫面，不是這種工程進度頁</div>
+              <div class="note" lang-en>A simple screen for non-technical users — not this engineering dashboard</div>
+            </div>
+          </div>
+        </a>
+        <div class="grid" style="margin-top:14px">
+          <div class="card"><div class="card-top"><b>P0 <span lang-zh>硬體驗證</span><span lang-en>Hardware</span></b><span class="pill pass">PASS</span></div><div class="note" lang-zh>ASR+LLM 都成功跑在 GPU 上</div><div class="note" lang-en>ASR + LLM both confirmed running on GPU</div></div>
+          <div class="card"><div class="card-top"><b>P1 <span lang-zh>語音輸入</span><span lang-en>Speech Input</span></b><span class="pill pass">PASS</span></div><div class="note" lang-zh>VAD、喚醒詞、中文 ASR 全部驗證</div><div class="note" lang-en>VAD, wake word, Chinese ASR all verified</div></div>
+          <div class="card"><div class="card-top"><b>P2 <span lang-zh>意圖辨識</span><span lang-en>Intent Recognition</span></b><span class="pill pass">PASS</span></div><div class="note" lang-zh>工具選擇準確率 97.1%</div><div class="note" lang-en>Tool-selection accuracy 97.1%</div></div>
+          <div class="card"><div class="card-top"><b>P3 <span lang-zh>電腦控制</span><span lang-en>Automation</span></b><span class="pill warn"><span lang-zh>17/35 工具</span><span lang-en>17/35 tools</span></span></div><div class="note" lang-zh>新增檔案操作（找/開/搬/複製/改名/建資料夾/刪除，限使用者家目錄）跟電源控制（關機/重開/睡眠，需複誦確認），其餘工具陸續補</div><div class="note" lang-en>Added file operations (find/open/move/copy/rename/create-folder/delete, sandboxed to your home folder) and power control (shutdown/restart/sleep, requires a spoken keyword); remaining tools being added</div></div>
+          <div class="card"><div class="card-top"><b>P4 <span lang-zh>安全把關</span><span lang-en>Safety</span></b><span class="pill warn"><span lang-zh>核心機制已通</span><span lang-en>Core loop working</span></span></div><div class="note" lang-zh>L2/L3敏感操作用語音確認已驗證；緊急停止熱鍵（Ctrl+Shift+F12）跟語音停止指令（「停止」「取消」）都已實作並真實測過</div><div class="note" lang-en>Voice confirmation for sensitive/dangerous actions verified; Emergency Stop hotkey (Ctrl+Shift+F12) and spoken stop commands ("stop"/"cancel") both implemented and tested end-to-end</div></div>
+          <div class="card"><div class="card-top"><b>P5 <span lang-zh>畫面輔助</span><span lang-en>Vision</span></b><span class="pill idle"><span lang-zh>未開始</span><span lang-en>Not started</span></span></div></div>
+        </div>
+      </section>
+
+      <section id="p0">
+        <div class="sec-head"><h2>P0 <span lang-zh>硬體與生態相容性驗證</span><span lang-en>Hardware &amp; Ecosystem Check</span></h2><span class="pill pass">PASS</span></div>
+        <p class="sec-sub" lang-zh>確認這台機器實際能不能跑語音辨識跟 AI 推論，不是憑空假設。</p>
+        <p class="sec-sub" lang-en>Confirms this machine can actually run speech recognition and AI inference — nothing assumed.</p>
+        <div class="grid">
+          <div class="card">
+            <div class="card-top"><b><span lang-zh>語音辨識引擎</span><span lang-en>Speech engine</span></b><span class="pill pass">GPU</span></div>
+            <div class="kv"><span class="k" lang-zh>使用引擎</span><span class="k" lang-en>Engine</span><span class="v">whisper.cpp</span></div>
+            <div class="kv"><span class="k" lang-zh>轉錄一句話耗時</span><span class="k" lang-en>Per-utterance time</span><span class="v">340 ms</span></div>
+          </div>
+          <div class="card">
+            <div class="card-top"><b><span lang-zh>大腦推論引擎</span><span lang-en>LLM engine</span></b><span class="pill pass">GPU</span></div>
+            <div class="kv"><span class="k" lang-zh>使用引擎</span><span class="k" lang-en>Engine</span><span class="v">llama.cpp</span></div>
+            <div class="kv"><span class="k" lang-zh>顯示卡</span><span class="k" lang-en>GPU</span><span class="v">RTX Spark (Blackwell)</span></div>
+          </div>
+          <div class="card">
+            <div class="card-top"><b>NPU</b><span class="pill idle"><span lang-zh>暫緩</span><span lang-en>On hold</span></span></div>
+            <div class="note" lang-zh>硬體有，但目前沒有官方軟體可以呼叫它，等廠商補上再處理。</div>
+            <div class="note" lang-en>Hardware exists but no official software path yet — revisit once the vendor ships one.</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="p1">
+        <div class="sec-head"><h2>P1 <span lang-zh>語音輸入</span><span lang-en>Speech Input</span></h2><span class="pill pass">PASS</span></div>
+        <p class="sec-sub" lang-zh>用 103 句常見中文語音指令實際測試，確保聽得懂、聽得快。</p>
+        <p class="sec-sub" lang-en>Tested against 103 common Chinese voice commands for accuracy and speed.</p>
+        <div class="grid">
+          <div class="card">
+            <div class="card-top"><b><span lang-zh>語音偵測（VAD）</span><span lang-en>Voice detection</span></b><span class="pill pass">6 ms</span></div>
+            <div class="note" lang-zh>判斷「現在有沒有人在說話」，反應快到感覺不出來，幾乎不耗電腦資源。</div>
+            <div class="note" lang-en>Detects "is someone speaking right now" — fast enough to feel instant, negligible resource use.</div>
+          </div>
+          <div class="card">
+            <div class="card-top"><b><span lang-zh>喚醒詞「嗨小助理」</span><span lang-en>Wake word "Hi Assistant"</span></b><span class="pill pass">88.5%</span></div>
+            <div class="note" lang-zh>自己在這台電腦訓練出中文喚醒詞了，一般說話幾乎不會誤觸發（100%正確）。接上真麥克風實測還發現「對房間安靜環境也會誤觸發」的問題，補了真實環境錄音當負樣本重訓後修好了。近似詞（如「嗨小主理」）辨別能力還在持續改善中。</div>
+            <div class="note" lang-en>Trained a custom Chinese wake word locally on this machine. Distinguishes normal speech from the real phrase well, but still confuses close-sounding near-misses — a usable first version, backed up by a second confirmation step rather than endlessly retraining.</div>
+          </div>
+          <div class="card">
+            <div class="card-top"><b><span lang-zh>中文辨識準確率</span><span lang-en>Chinese accuracy</span></b><span class="pill pass">97.9%</span></div>
+            <div class="note" lang-zh>已依你的指示改用最準的模型（medium），反應時間約 1.6 秒，你確認過這樣的速度感覺不到延遲。</div>
+            <div class="note" lang-en>Switched to the most accurate model per your request; ~1.6s response, confirmed as feeling instant to you.</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="p2">
+        <div class="sec-head"><h2>P2 <span lang-zh>意圖辨識</span><span lang-en>Intent Recognition</span></h2><span class="pill pass">PASS</span></div>
+        <p class="sec-sub" lang-zh>讓 AI 把你說的話，正確轉換成「該執行哪個動作」。</p>
+        <p class="sec-sub" lang-en>Maps what you say to the correct action to take.</p>
+        <div class="stack">
+          <h3 lang-zh>目前的成績</h3><h3 lang-en>Current score</h3>
+          <p lang-zh>用 103 句實測，第一版只有 78.6% 準確，抓出來的錯誤幾乎都是「工具說明寫得不夠清楚」造成的混淆（例如「工作管理員」跟「工作排程器」名字太像）。把說明重新寫清楚、多給幾個範例之後，準確率跳到 <b>97.1%</b>，超過原本設定的 95% 目標，而且反應時間還變快了（0.2秒/句）。</p>
+          <p lang-en>First pass on 103 test phrases scored 78.6%; nearly all errors traced back to unclear tool descriptions (e.g. "Task Manager" vs "Task Scheduler" sounding alike in Chinese). Rewriting the descriptions and adding examples pushed accuracy to <b>97.1%</b> — above the 95% target — while also getting faster (0.2s/phrase).</p>
+        </div>
+      </section>
+
+      <section id="milestone">
+        <div class="sec-head"><h2><span lang-zh>最新里程碑：整條語音迴圈真的能跑了</span><span lang-en>Latest milestone: the full voice loop actually works</span></h2></div>
+        <div class="stack">
+          <p lang-zh>今天把 P0-P3 全部串成一個真正的常駐程式（`src/listen_loop.py`）：對著麥克風說「嗨小助理」會被正確喚醒，講一般電腦操作指令（像「現在幾點」「把音量調到20%」）會被立刻執行；講聲學工程問題（像「我的喇叭低頻聲音怪怪的」）則會由語音助理用講的引導你把問題講清楚，三輪問答後自動幫你整理成一份正式「訂單」送給 AERIS 處理——<b>這整段從語音輸入到送出訂單，都是真的用講的走完，不是打字模擬</b>。</p>
+          <p lang-en>Today P0-P3 got wired into one real background program (`src/listen_loop.py`): saying "Hi Assistant" wakes it up correctly, ordinary commands ("what time is it", "set volume to 20%") execute immediately, and acoustic-engineering questions get a guided voice conversation that ends with a formal order handed to AERIS — <b>the whole thing, start to finish, driven entirely by voice, not typed simulation</b>.</p>
+        </div>
+      </section>
+
+      <section id="blueprint-audit">
+        <div class="sec-head"><h2><span lang-zh>藍圖盤點：補上安全缺口＋文字輸入</span><span lang-en>Blueprint audit: safety gaps closed, text input added</span></h2></div>
+        <div class="stack">
+          <p lang-zh>逐節對照原始藍圖檢查已完成的東西，抓到並修正兩個安全性缺口：緊急停止熱鍵原本設錯（不是藍圖規定的 <b>Ctrl+Shift+F12</b>），以及語音講「停止」「取消」原本完全無法打斷流程——兩者都已修正，並用真的語音合成→真的跑辨識引擎的方式驗證過，不是紙上談兵。同時補上文字輸入功能：<b>即時陪伴介面現在打字也能用</b>，跟語音是同一套後端邏輯、效果一樣，不會因為不方便講話就沒辦法用。</p>
+          <p lang-en>Cross-checked everything built so far against the original blueprint, section by section, and found two safety gaps: the Emergency Stop hotkey was wired to the wrong key (should be <b>Ctrl+Shift+F12</b> per spec), and spoken "stop"/"cancel" commands couldn't interrupt an in-progress flow at all — both fixed and verified with real synthesized speech run through the real recognition pipeline, not just code review. Also added text input: <b>the companion interface now accepts typing</b>, sharing the same backend logic as voice, so it works even when speaking isn't convenient.</p>
+        </div>
+      </section>
+
+      <section id="aeris-orders">
+        <div class="sec-head"><h2><span lang-zh>送給 AERIS 的訂單</span><span lang-en>Orders sent to AERIS</span></h2></div>
+        <p class="sec-sub" lang-zh>語音代理人（這個介面）判斷是聲學工程問題時，會引導你把需求講清楚，產生一份「訂單」交給 AERIS 後台處理。這裡列出最近送出的訂單跟目前狀態。</p>
+        <p class="sec-sub" lang-en>When this interface detects an acoustic-engineering question, it guides you through clarifying the request and hands a structured order to the AERIS backend. Recent orders and their status are listed below.</p>
+        <div id="ordersList" class="grid">
+          <div class="card"><div class="note" lang-zh>載入中…</div><div class="note" lang-en>Loading…</div></div>
+        </div>
+      </section>
+
+      <section id="roadmap">
+        <div class="sec-head"><h2><span lang-zh>接下來的路</span><span lang-en>What's next</span></h2></div>
+        <div class="stack">
+          <h3>P3 <span lang-zh>— 讓 AI 真的能操作電腦</span><span lang-en>— Let the AI actually operate the computer</span></h3>
+          <p lang-zh>目前 AI 只能「說出」它想做什麼，還不能真的去點擊、開啟、關閉東西。這一步會寫程式讓它能安全地操作 Windows（開程式、找檔案、點按鈕），並且<b>在第一次正式對你的桌面環境動手之前，會先讓你看過一次</b>，這是唯一會主動停下來讓你確認的地方。</p>
+          <p lang-en>Right now the AI can only "say" what it wants to do — it can't yet click, open, or close anything. This step writes the code to safely operate Windows (launch apps, find files, click buttons). <b>Before it ever touches your real desktop for the first time, you'll see it happen</b> — the one place I'll deliberately pause for you.</p>
+          <h3 style="margin-top:16px">P4 <span lang-zh>— 安全把關機制</span><span lang-en>— Safety guardrails</span></h3>
+          <p lang-zh>分成四個風險等級：看資料（免確認）→ 一般操作（免確認）→ 敏感操作（AI 會先問你）→ 危險操作（一定要你按確認）。同時做一個「操作紀錄本」，記下 AI 做過的每件事，方便回頭查。</p>
+          <p lang-en>Four risk tiers: read-only (no confirmation) → routine (no confirmation) → sensitive (AI asks first) → dangerous (always needs your confirmation). Also builds an audit log recording everything the AI does.</p>
+          <h3 style="margin-top:16px">P5 <span lang-zh>— 看不懂畫面時的備援</span><span lang-en>— Fallback when it can't read the screen</span></h3>
+          <p lang-zh>萬一 AI 找不到要點的按鈕，讓一個視覺模型「看」一眼畫面幫忙定位，只在必要時才啟動（省資源）。</p>
+          <p lang-en>If the AI can't locate a button, a vision model looks at the screen to help — only activated when actually needed, to save resources.</p>
+          <h3 style="margin-top:16px">P6 <span lang-zh>— 全部串起來，整體測試</span><span lang-en>— Full integration test</span></h3>
+          <p lang-zh>把前面五個階段全部接起來，測整體反應速度跟穩定度，達標才算真正完工。</p>
+          <p lang-en>Everything from the previous five phases wired together, tested for overall speed and stability. Only counts as truly done once it hits the targets.</p>
+        </div>
+      </section>
+
+      <section id="backend">
+        <div class="sec-head"><h2><span lang-zh>後端與資料庫（白話說明）</span><span lang-en>Backend &amp; Database (Plain-Language)</span></h2><span class="pill idle"><span lang-zh>規劃中，尚未建立</span><span lang-en>Planned, not built yet</span></span></div>
+        <p class="sec-sub" lang-zh>這裡故意不放任何程式碼——只用白話文解釋「東西存在哪裡、存了什麼」，方便你自己管理時看得懂。</p>
+        <p class="sec-sub" lang-en>Deliberately no code here — plain-language descriptions of what's stored and where, so you can manage this yourself.</p>
+        <div class="stack">
+          <h3 lang-zh>常駐服務（後端）</h3><h3 lang-en>Background service (backend)</h3>
+          <p lang-zh>一個在你電腦背景一直開著的小程式，負責「聽聲音→轉文字→AI理解→決定動作」這整條流程。它只聽你自己電腦的麥克風，<span class="term">不會</span>把任何聲音或畫面傳到網路上。</p>
+          <p lang-en>A small program that stays running in the background, handling "hear → transcribe → understand → decide" end to end. It only listens to your own microphone and <span class="term">never</span> sends audio or screen data over the network.</p>
+          <h3 style="margin-top:16px" lang-zh>資料庫（計畫中的三張表）</h3><h3 style="margin-top:16px" lang-en>Database (three planned tables)</h3>
+          <table class="dbtable">
+            <tr><th lang-zh>資料表</th><th lang-en>Table</th><th lang-zh>存什麼</th><th lang-en>What it stores</th></tr>
+            <tr><td class="field">對話紀錄</td><td lang-zh>你說過的話、AI 聽到的文字、AI 的回覆——方便你回頭查「它到底聽對了沒」</td><td lang-en>What you said, what the AI heard, and its reply — so you can check whether it heard correctly</td></tr>
+            <tr><td class="field">操作稽核</td><td lang-zh>AI 做過的每一個電腦操作（開了什麼、關了什麼、什麼時候），連同你有沒有按確認</td><td lang-en>Every action the AI took on your computer, and whether you approved it</td></tr>
+            <tr><td class="field">權限規則</td><td lang-zh>哪些動作免確認、哪些一定要你按確認，這張表就是那個規則清單</td><td lang-en>The rulebook: which actions are auto-approved vs. always need your confirmation</td></tr>
+          </table>
+          <p class="note" style="margin-top:10px" lang-zh>全部存在你自己電腦的一個檔案裡（不是雲端），你隨時可以要求我打開來看，也可以要求整個清空重來。</p>
+          <p class="note" lang-en>Everything lives in a single file on your own machine (never the cloud). You can ask to see it anytime, or wipe it and start over.</p>
+        </div>
+      </section>
+
+      <section id="principles">
+        <div class="sec-head"><h2><span lang-zh>我在照的原則</span><span lang-en>Principles I'm following</span></h2></div>
+        <div class="stack">
+          <p lang-zh>① <b>本機優先</b>——所有運算能在你這台電腦跑就不假手雲端；只有本機真的做不到才考慮雲端 AI，而且會先跟你講。② <b>精準度優先於速度</b>——只要你感覺不到延遲，就選比較準的方案。③ <b>能操作你電腦前一定先讓你看過</b>——這是唯一的停下來確認點，其他事我會自己判斷、自己修正、自己往下做。</p>
+          <p lang-en>① <b>Local-first</b> — everything runs on this machine unless it truly can't; cloud AI is a last resort, and I'll say so before using it. ② <b>Accuracy over speed</b> — as long as you can't feel the delay, pick the more accurate option. ③ <b>You see it before it touches your computer</b> — the only checkpoint; everything else I judge, fix, and drive forward myself.</p>
+        </div>
+      </section>
+
+      <div style="text-align:center;color:var(--sub);font-size:11.5px;margin-top:30px">
+        <span lang-zh>更新時間 2026-09-17 · P3新增檔案操作/電源控制 · 完整技術報告在 progress/ 資料夾</span>
+        <span lang-en>Updated 2026-09-17 · P3 added file ops/power control · full technical reports in the progress/ folder</span>
+      </div>
+    </main>
+
+    <nav class="rail" id="rail">
+      <div class="navlabel" lang-zh>導覽</div><div class="navlabel" lang-en>Navigate</div>
+      <a href="#overview"><span lang-zh>總覽</span><span lang-en>Overview</span></a>
+      <a href="#p0">P0 <span lang-zh>硬體</span><span lang-en>Hardware</span><span class="pill pass chip">PASS</span></a>
+      <a href="#p1">P1 <span lang-zh>語音輸入</span><span lang-en>Speech</span><span class="pill pass chip">PASS</span></a>
+      <a href="#p2">P2 <span lang-zh>意圖辨識</span><span lang-en>Intent</span><span class="pill pass chip">PASS</span></a>
+      <a href="#milestone"><span lang-zh>最新里程碑</span><span lang-en>Latest Milestone</span></a>
+      <a href="#blueprint-audit"><span lang-zh>藍圖盤點</span><span lang-en>Blueprint Audit</span></a>
+      <a href="#aeris-orders"><span lang-zh>AERIS 訂單</span><span lang-en>AERIS Orders</span></a>
+      <a href="#roadmap"><span lang-zh>接下來</span><span lang-en>Roadmap</span></a>
+      <a href="#backend"><span lang-zh>後端/資料庫</span><span lang-en>Backend/DB</span></a>
+      <a href="#principles"><span lang-zh>施工原則</span><span lang-en>Principles</span></a>
+    </nav>
+  </div>
+</div>
+
+<script>
+(function(){
+  var root = document.documentElement;
+  var themeBtn = document.getElementById('themeToggle');
+  var langBtn = document.getElementById('langToggle');
+  var menuBtn = document.getElementById('menuToggle');
+  var rail = document.getElementById('rail');
+  var scrim = document.getElementById('scrim');
+
+  function safeGet(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }
+  function safeSet(k,v){ try { localStorage.setItem(k,v); } catch(e){} }
+
+  var savedTheme = safeGet('voiceagent-theme');
+  if (savedTheme) root.setAttribute('data-theme', savedTheme);
+  var savedLang = safeGet('voiceagent-lang');
+  if (savedLang) root.setAttribute('data-lang', savedLang);
+
+  themeBtn.addEventListener('click', function(){
+    var current = root.getAttribute('data-theme');
+    var isDarkNow = current === 'dark' || (!current && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    var next = isDarkNow ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    safeSet('voiceagent-theme', next);
+  });
+
+  langBtn.addEventListener('click', function(){
+    var next = root.getAttribute('data-lang') === 'en' ? 'zh' : 'en';
+    root.setAttribute('data-lang', next);
+    safeSet('voiceagent-lang', next);
+  });
+
+  function closeMenu(){ rail.classList.remove('open'); scrim.classList.remove('show'); }
+  menuBtn.addEventListener('click', function(){
+    rail.classList.toggle('open');
+    scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', closeMenu);
+  rail.querySelectorAll('a').forEach(function(a){ a.addEventListener('click', closeMenu); });
+})();
+
+(function(){
+  var listEl = document.getElementById('ordersList');
+  if (!listEl) return;
+
+  function esc(s){ return (s||'').replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  }); }
+
+  fetch('/api/orders').then(function(r){ return r.json(); }).then(function(orders){
+    if (!orders || orders.length === 0) {
+      listEl.innerHTML =
+        '<div class="card"><div class="note" lang-zh>還沒有送出過訂單。</div><div class="note" lang-en>No orders sent yet.</div></div>';
+      return;
+    }
+    listEl.innerHTML = orders.map(function(o){
+      var badge = o.delivered
+        ? '<span class="pill pass"><span lang-zh>AERIS已交付</span><span lang-en>Delivered</span></span>'
+        : '<span class="pill warn"><span lang-zh>等待AERIS處理</span><span lang-en>Awaiting AERIS</span></span>';
+      return '<div class="card">' +
+        '<div class="card-top"><b>' + esc(o.case_id || o.filename) + '</b>' + badge + '</div>' +
+        '<div class="kv"><span class="k" lang-zh>產品</span><span class="k" lang-en>Product</span><span class="v">' + esc(o.product || '-') + '</span></div>' +
+        '<div class="kv"><span class="k" lang-zh>輸入方式</span><span class="k" lang-en>Input</span><span class="v">' + esc(o.input_mode || '-') + '</span></div>' +
+        '<div class="note">' + esc(o.user_goal || '') + '</div>' +
+        '</div>';
+    }).join('');
+  }).catch(function(){
+    listEl.innerHTML =
+      '<div class="card"><div class="note" lang-zh>讀取不到訂單資料（可能是用舊版伺服器開的，請用 start.ps1 重新啟動）。</div>' +
+      '<div class="note" lang-en>Could not load orders (may be running the old static server — restart via start.ps1).</div></div>';
+  });
+})();
+</script>
+</body>
+</html>

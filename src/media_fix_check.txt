@@ -1,0 +1,2 @@
+{"tool": "media_control", "args": {"action": "play_pause"}}
+{"tool": "set_volume", "args": {"action": "mute"}}

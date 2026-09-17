@@ -1,0 +1,2 @@
+well-defined categories (n=82): accuracy = 0.4512
+dev_tool_op catch-all (n=21): excluded from fair comparison, label too coarse

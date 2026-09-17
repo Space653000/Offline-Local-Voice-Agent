@@ -1,0 +1,17 @@
+[9] 幫我開啟檔案總管 => expected=open_app predicted=file_op
+[10] 幫我搜尋這台電腦裡的文件 => expected=file_op predicted=cloud_file_op
+[22] 關閉所有正在執行的程式 => expected=window_op predicted=power_op
+[27] 打開控制台 => expected=open_app predicted=dev_tool_op
+[28] 打開工作管理員 => expected=open_app predicted=task_scheduler_op
+[30] 把 Wi-Fi 關掉 => expected=network_toggle predicted=power_op
+[32] 把藍牙打開 => expected=network_toggle predicted=power_op
+[33] 把藍牙關掉 => expected=network_toggle predicted=power_op
+[42] 幫我記錄一下今天的待辦事項 => expected=reminder_op predicted=task_scheduler_op
+[50] 打開記事本 => expected=open_app predicted=text_input_op
+[63] 把這個檔案下載下來 => expected=cloud_file_op predicted=file_op
+[79] 掃描電腦有沒有病毒 => expected=system_maintenance predicted=driver_op
+[80] 清理電腦裡的垃圾檔案 => expected=system_maintenance predicted=cloud_file_op
+[81] 查看硬碟還有多少空間 => expected=system_maintenance predicted=cloud_file_op
+[92] 執行這個 Python 腳本 => expected=dev_tool_op predicted=text_input_op
+[96] 提交這次的程式修改 => expected=git_op predicted=cloud_file_op
+[102] 解決這個合併衝突 => expected=git_op predicted=cloud_file_op

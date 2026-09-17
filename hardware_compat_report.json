@@ -1,0 +1,115 @@
+{
+  "phase": "P0",
+  "generated_at": "2026-09-13T22:10:00+08:00",
+  "verdict": "PASS",
+  "acceptance_rule": "至少一條 ASR 路徑 + 一條 LLM 推論路徑成功跑通",
+  "hardware": {
+    "os": "Windows 11 Pro Insider Preview",
+    "os_build": "10.0.28020",
+    "arch": "ARM64",
+    "system_type": "ARM64-based PC",
+    "gpu": "NVIDIA RTX Spark N1X (6144-core Blackwell RTX GPU)",
+    "gpu_driver": "32.0.16.1600",
+    "gpu_vram_mib": 46334,
+    "cuda_compute_capability": "sm_121a",
+    "cuda_toolkit": "13.4.46 (nvcc), KMD 616.00 / CUDA UMD 13.4",
+    "npu": "NVIDIA NPU (present, not exercised in P0)",
+    "build_tools": {
+      "msvc": "14.44.35207 (VC Build Tools 2022 17.14.36, Hostarm64 native toolset present)",
+      "clang_cl": "LLVM 22.1.8 (installed but not in PATH by default; C:\\Program Files\\LLVM\\bin)",
+      "cmake": "4.4.0",
+      "ninja": "present via winget links",
+      "python_arm64_native": "3.12.10 (C:\\Users\\testuser\\AppData\\Local\\Programs\\Python\\Python312-arm64)"
+    }
+  },
+  "toolchains": [
+    {
+      "name": "whisper.cpp",
+      "role": "ASR",
+      "status": "PASS",
+      "build": {
+        "generator": "Ninja",
+        "cpu_compiler": "clang-cl (LLVM 22.1.8)",
+        "cuda_host_compiler": "cl.exe (MSVC ARM64 native) — same mixed-toolchain formula as llama.cpp",
+        "note_msvc_cpu_backend": "MSVC/cl.exe REJECTED for ggml ARM CPU backend build ('MSVC is not supported for ARM, use clang') — must use clang-cl",
+        "note_openmp": "GGML_OPENMP had to be set OFF; this machine only has the DEBUG variant of libomp140.aarch64.dll installed system-wide (release variant missing from VC redist), causing STATUS_DLL_NOT_FOUND at runtime otherwise",
+        "cuda_arch_detected": "121a-real (Blackwell / RTX Spark)",
+        "cpu_features_detected": ["NEON", "ARM_FMA", "FP16_VA", "MATMUL_INT8", "SVE (SVE_CNT=16)", "DOTPROD", "REPACK"]
+      },
+      "inference_test_cpu_pass1": {
+        "backend_used": "CPU",
+        "output_transcript": "and so my fellow Americans ask not what your country can do for you ask what you can do for your country",
+        "correct": true,
+        "timings_ms": { "load": 70.34, "mel": 4.32, "encode": 604.13, "decode": 2.02, "total": 815.78 }
+      },
+      "inference_test_gpu_pass2": {
+        "model": "ggml-tiny.en.bin (~77MB, official ggerganov/whisper.cpp release)",
+        "input": "samples/jfk.wav (bundled sample)",
+        "backend_used": "CUDA0 (RTX Spark, confirmed via 'whisper_backend_init_gpu: using CUDA0 backend')",
+        "output_transcript": "And so my fellow Americans ask not what your country can do for you ask what you can do for your country.",
+        "correct": true,
+        "timings_ms": { "load": 77.79, "mel": 10.59, "encode": 77.87, "decode": 10.98, "total": 339.96 },
+        "speedup_vs_cpu": "encode 604.13ms -> 77.87ms (~7.8x), total 815.78ms -> 339.96ms (~2.4x)"
+      }
+    },
+    {
+      "name": "llama.cpp",
+      "role": "LLM inference",
+      "status": "PASS",
+      "build": {
+        "generator": "Ninja",
+        "cpu_compiler": "clang-cl (for ggml-cpu ARM backend)",
+        "cuda_host_compiler": "cl.exe (MSVC ARM64 native)",
+        "note_clangcl_rejected_by_nvcc": "nvcc refused clang-cl as CUDA host compiler on Windows ARM64: 'nvcc fatal : Host compiler targets unsupported OS'. Using cl.exe (Hostarm64 MSVC) as -DCMAKE_CUDA_HOST_COMPILER resolved this — mixed toolchain (clang-cl for CPU/.cpp, cl.exe for .cu) is required.",
+        "cuda_arch_detected": "121a-real (native detection, Blackwell / RTX Spark)",
+        "flash_attention_kv_combos": ["f16-f16", "q4_0-q4_0", "q8_0-q8_0", "bf16-bf16"],
+        "blackwell_native_fp4": true
+      },
+      "inference_test": {
+        "model": "Qwen2.5-0.5B-Instruct-GGUF q4_k_m (~397MB, official Qwen HF repo)",
+        "backend_used": "CUDA (GPU) — model+context+compute buffers 100% resident on CUDA0 (823 MiB of 46334 MiB)",
+        "prompt": "Hello, how are you? Answer in one short sentence.",
+        "output": "Hello! I am just a digital assistant and am not capable of physical interaction or emotions. However, I am here to help you with any questions or tasks you may have.",
+        "prompt_eval_tokens_per_sec": 1431.4,
+        "generation_tokens_per_sec": 275.7
+      }
+    },
+    {
+      "name": "faster-whisper",
+      "role": "ASR (备援)",
+      "status": "FAIL",
+      "reason": "Dependency ctranslate2 has ZERO published wheels for win_arm64 (confirmed via `pip index versions ctranslate2` -> no matching distribution). pip install faster-whisper also fails earlier on the `av` (PyAV) dependency trying to build from source (Cython/FFmpeg header incompatibility), independent confirmation that this stack is not ARM64-Windows-ready via prebuilt wheels.",
+      "would_require": "Building ctranslate2 from source for win_arm64 (out of scope for P0 minimal validation; whisper.cpp already satisfies the ASR requirement)."
+    },
+    {
+      "name": "onnxruntime-directml",
+      "role": "ONNX inference (GPU via DirectML)",
+      "status": "FAIL",
+      "reason": "No win_arm64 wheel published for onnxruntime-directml (`pip install onnxruntime-directml` -> No matching distribution found).",
+      "fallback_tested": {
+        "name": "onnxruntime (plain, CPU)",
+        "status": "PASS",
+        "version": "1.30.0",
+        "wheel": "onnxruntime-1.30.0-cp312-cp312-win_arm64.whl",
+        "available_providers": ["AzureExecutionProvider", "CPUExecutionProvider"],
+        "note": "No DmlExecutionProvider available on this platform/package combination.",
+        "inference_test": "Trivial single-node Add graph, CPUExecutionProvider, correct result [11,22,33]"
+      }
+    }
+  ],
+  "summary": {
+    "asr_path_confirmed": "whisper.cpp (CUDA GPU, Blackwell sm_121a, RTX Spark) — CPU pass also validated as fallback",
+    "llm_path_confirmed": "llama.cpp (CUDA GPU, Blackwell sm_121a, RTX Spark)",
+    "gpu_first_status": "PASS — ASR + LLM both fully GPU-resident on RTX Spark (CUDA). VAD/wakeword recommended to stay CPU (negligible cost, no ARM64 GPU/NPU wheel exists for onnxruntime-directml or onnxruntime-gpu anyway).",
+    "npu_status": "PRESENT BUT UNUSABLE — Windows recognizes 'NVIDIA NPU' (ACPI\\NVDA200A\\0, MCDM driver, bundled under the main GPU driver package) but there is no installed NPU SDK and no ARM64-Windows wheel for any ONNX Runtime execution provider (DirectML/QNN) that could reach it. ggml (whisper.cpp/llama.cpp) has no NPU backend concept at all. Revisit when NVIDIA publishes an NPU SDK for this platform.",
+    "p0_verdict": "PASS — 進入 P1",
+    "key_engineering_notes_for_p1_plus": [
+      "所有 ggml-based CPU backend 編譯必須用 clang-cl，不能用純 MSVC (cl.exe)",
+      "CUDA (.cu) 編譯的 host compiler 必須用 cl.exe，不能用 clang-cl（跟上一條剛好相反，需混合 toolchain）— 這個公式對 whisper.cpp 跟 llama.cpp 都適用",
+      "GGML_OPENMP 目前必須關閉（缺 release 版 libomp140.aarch64.dll），如需開啟，需另外安裝正確的 VC redist ARM64 元件",
+      "faster-whisper / ctranslate2 路線在此機器上完全不可行，正式方案排除，全部走 whisper.cpp",
+      "onnxruntime-directml / onnxruntime-gpu 在 ARM64 都無 wheel，VAD/喚醒詞這類小模型建議留在 CPU 運算，不值得為了榨GPU/NPU去自編onnxruntime原始碼",
+      "NPU（ACPI\\NVDA200A\\0）目前沒有可用的軟體介面，暫列觀察項目，非P0阻塞項"
+    ]
+  }
+}

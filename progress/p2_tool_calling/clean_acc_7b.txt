@@ -1,0 +1,2 @@
+excluding 12 ambiguous sentences (n=91): accuracy = 0.8132
+wrote 17 genuine errors to errors_7b.txt

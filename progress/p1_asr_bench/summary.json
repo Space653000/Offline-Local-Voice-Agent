@@ -1,0 +1,26 @@
+{
+  "tiny": {
+    "avg_cer_raw": 0.1872,
+    "avg_cer_script_normalized": 0.1662,
+    "avg_latency_s": 0.4058,
+    "real_time_factor": 0.1503
+  },
+  "base": {
+    "avg_cer_raw": 0.1095,
+    "avg_cer_script_normalized": 0.101,
+    "avg_latency_s": 0.461,
+    "real_time_factor": 0.1708
+  },
+  "small": {
+    "avg_cer_raw": 0.2424,
+    "avg_cer_script_normalized": 0.0588,
+    "avg_latency_s": 0.7735,
+    "real_time_factor": 0.2865
+  },
+  "medium": {
+    "avg_cer_raw": 0.0534,
+    "avg_cer_script_normalized": 0.0206,
+    "avg_latency_s": 1.6123,
+    "real_time_factor": 0.5973
+  }
+}

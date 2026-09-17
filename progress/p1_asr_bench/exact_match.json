@@ -1,0 +1,18 @@
+{
+  "tiny": {
+    "exact_match_rate": 0.3883,
+    "n": 103
+  },
+  "base": {
+    "exact_match_rate": 0.6505,
+    "n": 103
+  },
+  "small": {
+    "exact_match_rate": 0.7573,
+    "n": 103
+  },
+  "medium": {
+    "exact_match_rate": 0.9029,
+    "n": 103
+  }
+}

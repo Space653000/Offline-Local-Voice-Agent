@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>語音助理</title>
+<style>
+:root{
+  --bg:#f5f6f4; --surface:#ffffff; --surface-2:#eef0ec; --ink:#161a17; --sub:#5c655d; --border:#dde1d9;
+  --accent:#1f7a6c; --accent-ink:#0d3f37; --accent-soft:#e3f0ec;
+  --pass:#2f8f4e; --pass-bg:#e7f5ea; --warn:#b9791a; --warn-bg:#fbf1e0; --fail:#c23b34; --fail-bg:#fbeae8; --idle:#8a8f87; --idle-bg:#eceee9;
+  --shadow: 0 1px 2px rgba(20,25,20,.04), 0 4px 14px rgba(20,25,20,.05);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#12140f; --surface:#1a1d17; --surface-2:#20241d; --ink:#eef1ea; --sub:#a2ab9c; --border:#31362b;
+    --accent:#5cbfa8; --accent-ink:#c9ece2; --accent-soft:#1c342e;
+    --pass:#6fce8c; --pass-bg:#173224; --warn:#e0aa4d; --warn-bg:#3a2c12; --fail:#f0857c; --fail-bg:#3a1917; --idle:#7d857a; --idle-bg:#232821;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#12140f; --surface:#1a1d17; --surface-2:#20241d; --ink:#eef1ea; --sub:#a2ab9c; --border:#31362b;
+  --accent:#5cbfa8; --accent-ink:#c9ece2; --accent-soft:#1c342e;
+  --pass:#6fce8c; --pass-bg:#173224; --warn:#e0aa4d; --warn-bg:#3a2c12; --fail:#f0857c; --fail-bg:#3a1917; --idle:#7d857a; --idle-bg:#232821;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;min-height:100vh;background:var(--bg);color:var(--ink);
+  font-family:"Aptos","Microsoft JhengHei","微軟正黑體",system-ui,sans-serif;font-size:16px;
+  display:flex;flex-direction:column;align-items:center;padding:24px 20px 40px;
+}
+h1,h2,h3{font-family:inherit;margin:0;text-wrap:balance}
+.topbar{width:100%;max-width:480px;display:flex;justify-content:flex-end;gap:8px;margin-bottom:8px}
+.icon-btn{width:36px;height:36px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--ink);cursor:pointer;font-size:13px;font-weight:600}
+
+.stage{width:100%;max-width:480px;display:flex;flex-direction:column;align-items:center;margin-top:24px}
+
+.orb-wrap{width:180px;height:180px;display:flex;align-items:center;justify-content:center;position:relative;margin-bottom:22px}
+.orb{width:120px;height:120px;border-radius:50%;background:var(--idle-bg);border:3px solid var(--idle);
+     display:flex;align-items:center;justify-content:center;font-size:44px;transition:all .4s ease;position:relative;z-index:2}
+.ring{position:absolute;border-radius:50%;border:2px solid var(--idle);opacity:0;}
+.ring1{width:150px;height:150px}
+.ring2{width:180px;height:180px}
+@keyframes pulseRing{0%{transform:scale(.85);opacity:.55}100%{transform:scale(1.15);opacity:0}}
+.orb-wrap[data-state="listening_command"] .orb,
+.orb-wrap[data-state="wake_detected"] .orb{background:var(--pass-bg);border-color:var(--pass)}
+.orb-wrap[data-state="listening_command"] .ring,
+.orb-wrap[data-state="wake_detected"] .ring{border-color:var(--pass);animation:pulseRing 1.6s ease-out infinite}
+.orb-wrap[data-state="thinking"] .orb{background:var(--warn-bg);border-color:var(--warn)}
+.orb-wrap[data-state="thinking"] .orb{animation:spin 1.4s linear infinite}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.orb-wrap[data-state="speaking"] .orb,
+.orb-wrap[data-state="front_desk"] .orb{background:var(--accent-soft);border-color:var(--accent)}
+.orb-wrap[data-state="speaking"] .ring,
+.orb-wrap[data-state="front_desk"] .ring{border-color:var(--accent);animation:pulseRing 1.1s ease-out infinite}
+.ring2{animation-delay:.4s !important}
+.orb-wrap[data-state="not_running"] .orb{background:var(--fail-bg);border-color:var(--fail)}
+
+.status-text{font-size:22px;font-weight:800;text-align:center;margin-bottom:6px}
+.status-sub{font-size:13.5px;color:var(--sub);text-align:center;margin-bottom:28px}
+
+.transcript-card{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:16px;
+  padding:16px 18px;box-shadow:var(--shadow);margin-bottom:14px;min-height:56px}
+.transcript-card .label{font-size:11px;color:var(--sub);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.transcript-card .text{font-size:15px;line-height:1.6}
+.transcript-card.empty .text{color:var(--sub)}
+
+.try-section{width:100%;margin-top:18px}
+.try-section h3{font-size:13px;color:var(--sub);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px}
+.chip-grid{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:8px 14px;
+  font-size:13.5px;color:var(--ink);box-shadow:var(--shadow)}
+
+.not-running-card{width:100%;background:var(--fail-bg);border:1px solid var(--fail);border-radius:14px;
+  padding:16px 18px;margin-top:10px;font-size:13.5px;line-height:1.7;color:var(--ink)}
+.not-running-card b{color:var(--fail)}
+.not-running-card code{background:var(--surface);padding:2px 6px;border-radius:6px;font-family:ui-monospace,Consolas,monospace}
+
+/* ---- onboarding overlay ---- */
+.overlay{position:fixed;inset:0;background:rgba(10,12,9,.55);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
+.overlay[hidden]{display:none}
+.onboard-card{width:100%;max-width:420px;background:var(--surface);border-radius:20px;padding:28px 26px 22px;box-shadow:var(--shadow)}
+.onboard-card h2{font-size:19px;margin-bottom:10px}
+.onboard-card p{font-size:14px;line-height:1.75;color:var(--ink);margin:0 0 14px}
+.onboard-steps{display:flex;gap:6px;margin-bottom:18px}
+.onboard-steps i{flex:1;height:4px;border-radius:4px;background:var(--surface-2)}
+.onboard-steps i.active{background:var(--accent)}
+.onboard-nav{display:flex;justify-content:space-between;align-items:center;margin-top:4px}
+.btn{border:none;border-radius:12px;padding:10px 18px;font-size:14px;font-weight:700;cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--surface)}
+.btn.ghost{background:transparent;color:var(--sub)}
+.example-list{list-style:none;padding:0;margin:0 0 6px}
+.example-list li{background:var(--surface-2);border-radius:10px;padding:9px 12px;margin-bottom:8px;font-size:13.5px}
+
+.text-input-row{width:100%;display:flex;gap:8px;margin-top:16px}
+.text-input-row input[type=text]{flex:1;border:1px solid var(--border);border-radius:12px;padding:11px 14px;
+  font-size:15px;background:var(--surface);color:var(--ink);font-family:inherit}
+.text-input-row input[type=text]:focus{outline:2px solid var(--accent);outline-offset:1px}
+.text-input-row button{border:none;border-radius:12px;padding:0 18px;font-size:14px;font-weight:700;
+  cursor:pointer;background:var(--accent);color:var(--surface)}
+.text-input-row button:disabled{opacity:.5;cursor:default}
+.input-hint{font-size:12px;color:var(--sub);margin-top:6px}
+
+.confirm-card{width:100%;background:var(--warn-bg);border:1px solid var(--warn);border-radius:14px;
+  padding:14px 16px;margin-top:10px;font-size:14px;line-height:1.6}
+.confirm-card .level{font-weight:800;color:var(--warn)}
+.confirm-card .actions{display:flex;gap:8px;margin-top:10px}
+.confirm-card input[type=text]{width:100%;border:1px solid var(--border);border-radius:10px;padding:8px 10px;
+  font-size:14px;margin-top:8px;font-family:inherit}
+.confirm-card button{border:none;border-radius:10px;padding:8px 16px;font-size:13.5px;font-weight:700;cursor:pointer}
+.confirm-card .btn-yes{background:var(--accent);color:var(--surface)}
+.confirm-card .btn-no{background:var(--surface-2);color:var(--ink)}
+
+.frontdesk-card{width:100%;background:var(--accent-soft);border:1px solid var(--accent);border-radius:14px;
+  padding:14px 16px;margin-top:10px;font-size:14px;line-height:1.6}
+.frontdesk-card .q{font-weight:700;margin-bottom:8px}
+.frontdesk-card .opt-chips{display:flex;flex-wrap:wrap;gap:6px}
+.frontdesk-card .opt-chip{background:var(--surface);border:1px solid var(--border);border-radius:16px;
+  padding:6px 12px;font-size:13px;cursor:pointer}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="icon-btn" id="helpBtn" title="重新看說明">？</button>
+  <button class="icon-btn" id="themeToggle" title="切換深淺色">🌓</button>
+</div>
+
+<div class="stage">
+  <div class="orb-wrap" id="orbWrap" data-state="idle">
+    <div class="ring ring2"></div>
+    <div class="ring ring1"></div>
+    <div class="orb" id="orbIcon">🎙️</div>
+  </div>
+
+  <div class="status-text" id="statusText">待命中</div>
+  <div class="status-sub" id="statusSub">說「嗨小助理」開始</div>
+
+  <div class="transcript-card empty" id="transcriptCard">
+    <div class="label">你剛剛說</div>
+    <div class="text" id="transcriptText">（還沒有講話）</div>
+  </div>
+  <div class="transcript-card empty" id="responseCard">
+    <div class="label">助理回覆</div>
+    <div class="text" id="responseText">（還沒有回覆）</div>
+  </div>
+
+  <div id="notRunningNotice" class="not-running-card" hidden>
+    <b>語音助理程式還沒開始執行。</b><br>
+    請在電腦上開一個終端機視窗，執行：<br>
+    <code>python src\listen_loop.py</code><br>
+    開始之後，這個頁面就會自動顯示即時狀態，不用重新整理。
+  </div>
+
+  <div class="text-input-row">
+    <input type="text" id="textInput" placeholder="不方便講話？也可以打字，例如：現在幾點" autocomplete="off">
+    <button id="sendBtn">傳送</button>
+  </div>
+  <div class="input-hint">語音跟文字都可以用，兩種方式效果一樣</div>
+
+  <div id="confirmCard" class="confirm-card" hidden></div>
+  <div id="frontdeskCard" class="frontdesk-card" hidden></div>
+
+  <div class="try-section">
+    <h3>可以試著說</h3>
+    <div class="chip-grid">
+      <span class="chip">嗨小助理，現在幾點</span>
+      <span class="chip">嗨小助理，把音量調到 50%</span>
+      <span class="chip">嗨小助理，幫我截圖</span>
+      <span class="chip">嗨小助理，複製這段文字：你好</span>
+      <span class="chip">嗨小助理，我的喇叭聲音怪怪的</span>
+    </div>
+  </div>
+</div>
+
+<!-- 新手引導 overlay -->
+<div class="overlay" id="onboardOverlay">
+  <div class="onboard-card">
+    <div class="onboard-steps">
+      <i class="active" data-step="0"></i><i data-step="1"></i><i data-step="2"></i>
+    </div>
+    <div id="onboardStep0">
+      <h2>歡迎使用語音助理 👋</h2>
+      <p>這是一個完全離線的語音助理，所有運算都在你自己的電腦上完成，不會把你說的話傳到網路上。</p>
+      <p>使用方式很簡單：先說一句「<b>嗨小助理</b>」喚醒它，接著說出你想做的事就可以了。</p>
+    </div>
+    <div id="onboardStep1" hidden>
+      <h2>怎麼開始用？</h2>
+      <p>1. 確認電腦有麥克風、音量沒有靜音<br>
+         2. 說「<b>嗨小助理</b>」，等畫面的圓圈變成綠色<br>
+         3. 接著說出你的指令，說完停頓一下，助理就會開始處理</p>
+      <p>畫面中間的圓圈會告訴你現在的狀態：灰色是待命、綠色是在聽你說話、黃色是助理在思考、藍綠色是助理在說話。</p>
+    </div>
+    <div id="onboardStep2" hidden>
+      <h2>可以試試這些</h2>
+      <ul class="example-list">
+        <li>🕐 「嗨小助理，現在幾點」</li>
+        <li>🔊 「嗨小助理，把音量調到 50%」</li>
+        <li>📸 「嗨小助理，幫我截圖」</li>
+        <li>🔧 「嗨小助理，我的喇叭聲音怪怪的」— 這類專業問題助理會反過來引導你把問題講清楚</li>
+      </ul>
+      <p>準備好了嗎？開始體驗吧！</p>
+    </div>
+    <div class="onboard-nav">
+      <button class="btn ghost" id="onboardSkip">略過</button>
+      <button class="btn primary" id="onboardNext">下一步</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var root = document.documentElement;
+  function safeGet(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }
+  function safeSet(k,v){ try { localStorage.setItem(k,v); } catch(e){} }
+
+  var savedTheme = safeGet('voiceagent-theme');
+  if (savedTheme) root.setAttribute('data-theme', savedTheme);
+  document.getElementById('themeToggle').addEventListener('click', function(){
+    var isDarkNow = root.getAttribute('data-theme') === 'dark' ||
+      (!root.getAttribute('data-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    var next = isDarkNow ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    safeSet('voiceagent-theme', next);
+  });
+
+  // ---- onboarding ----
+  var overlay = document.getElementById('onboardOverlay');
+  var steps = [document.getElementById('onboardStep0'), document.getElementById('onboardStep1'), document.getElementById('onboardStep2')];
+  var dots = overlay.querySelectorAll('.onboard-steps i');
+  var cur = 0;
+  function showStep(i){
+    steps.forEach(function(s,idx){ s.hidden = idx !== i; });
+    dots.forEach(function(d,idx){ d.classList.toggle('active', idx <= i); });
+    document.getElementById('onboardNext').textContent = i === steps.length-1 ? '開始使用' : '下一步';
+  }
+  document.getElementById('onboardNext').addEventListener('click', function(){
+    if (cur < steps.length - 1) { cur++; showStep(cur); }
+    else { overlay.hidden = true; safeSet('voiceagent-onboarded', '1'); }
+  });
+  document.getElementById('onboardSkip').addEventListener('click', function(){
+    overlay.hidden = true; safeSet('voiceagent-onboarded', '1');
+  });
+  document.getElementById('helpBtn').addEventListener('click', function(){
+    cur = 0; showStep(0); overlay.hidden = false;
+  });
+  if (safeGet('voiceagent-onboarded') === '1') overlay.hidden = true;
+
+  // ---- live state polling ----
+  var STATE_TEXT = {
+    idle: ['待命中', '說「嗨小助理」開始'],
+    wake_detected: ['我聽到你了！', '準備聽你說話'],
+    listening_command: ['請說吧', '我在聽你說話'],
+    thinking: ['我在想...', '稍等一下'],
+    speaking: ['助理說話中', ''],
+    front_desk: ['多問幾句', '幫你把問題整理清楚'],
+    not_running: ['還沒開始', '請先啟動語音助理程式'],
+  };
+  var ICONS = {
+    idle: '🎙️', wake_detected: '👂', listening_command: '👂',
+    thinking: '💭', speaking: '💬', front_desk: '🔧', not_running: '⏸️',
+  };
+
+  var orbWrap = document.getElementById('orbWrap');
+  var orbIcon = document.getElementById('orbIcon');
+  var statusText = document.getElementById('statusText');
+  var statusSub = document.getElementById('statusSub');
+  var transcriptText = document.getElementById('transcriptText');
+  var transcriptCard = document.getElementById('transcriptCard');
+  var responseText = document.getElementById('responseText');
+  var responseCard = document.getElementById('responseCard');
+  var notRunningNotice = document.getElementById('notRunningNotice');
+
+  function applyState(data){
+    var status = data.status || 'idle';
+    orbWrap.setAttribute('data-state', status);
+    orbIcon.textContent = ICONS[status] || '🎙️';
+    var pair = STATE_TEXT[status] || [data.message || '', ''];
+    statusText.textContent = data.message || pair[0];
+    statusSub.textContent = status === 'idle' || status === 'wake_detected' ? pair[1] : (data.message ? '' : pair[1]);
+    if (status === 'speaking' || status === 'front_desk') {
+      statusText.textContent = pair[0];
+      statusSub.textContent = data.message || '';
+    }
+
+    if (data.transcript) {
+      transcriptText.textContent = data.transcript;
+      transcriptCard.classList.remove('empty');
+    }
+    if (data.response) {
+      responseText.textContent = data.response;
+      responseCard.classList.remove('empty');
+    }
+    notRunningNotice.hidden = status !== 'not_running';
+  }
+
+  function poll(){
+    fetch('/api/state', {cache: 'no-store'}).then(function(r){ return r.json(); }).then(function(data){
+      applyState(data);
+    }).catch(function(){
+      applyState({status: 'not_running'});
+    });
+  }
+  poll();
+  setInterval(poll, 500);
+
+  // ---- text input（跟語音路徑走同一套 command_processor.py，藍圖要求文字/語音都要能用）----
+  var sessionId = 'web-' + Math.random().toString(36).slice(2);
+  var textInput = document.getElementById('textInput');
+  var sendBtn = document.getElementById('sendBtn');
+  var confirmCard = document.getElementById('confirmCard');
+  var frontdeskCard = document.getElementById('frontdeskCard');
+  var frontdeskActive = false;
+
+  function showTranscript(text){
+    transcriptText.textContent = text;
+    transcriptCard.classList.remove('empty');
+  }
+  function showResponse(text){
+    responseText.textContent = text;
+    responseCard.classList.remove('empty');
+  }
+
+  function renderConfirm(call, reason, level, requiresTyped){
+    frontdeskCard.hidden = true;
+    confirmCard.hidden = false;
+    confirmCard.innerHTML =
+      '<div><span class="level">[' + level + ']</span> ' + reason + '</div>' +
+      (requiresTyped ? '<input type="text" id="confirmKeyword" placeholder="請輸入「確認執行」才能繼續">' : '') +
+      '<div class="actions">' +
+        '<button class="btn-yes" id="confirmYes">同意執行</button>' +
+        '<button class="btn-no" id="confirmNo">取消</button>' +
+      '</div>';
+    document.getElementById('confirmYes').addEventListener('click', function(){
+      var typed = requiresTyped ? (document.getElementById('confirmKeyword').value || '') : null;
+      confirmCard.hidden = true;
+      fetch('/api/confirm', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({tool: call.tool, args: call.args, approved: true, typed_keyword: typed}),
+      }).then(function(r){ return r.json(); }).then(function(res){
+        showResponse(JSON.stringify(res.result || res, null, 0));
+      });
+    });
+    document.getElementById('confirmNo').addEventListener('click', function(){
+      confirmCard.hidden = true;
+      showResponse('已取消，沒有執行');
+    });
+  }
+
+  function renderFrontdesk(step){
+    confirmCard.hidden = true;
+    frontdeskCard.hidden = false;
+    frontdeskActive = true;
+    var opts = (step.options && step.options.length ? step.options : (step.state === 'PREVIEW' ? ['是', '不是'] : [])).map(function(o){
+      return '<span class="opt-chip" data-opt="' + o.replace(/"/g,'&quot;') + '">' + o + '</span>';
+    }).join('');
+    frontdeskCard.innerHTML =
+      '<div class="q">' + (step.question || '') + '</div>' +
+      '<div class="opt-chips">' + opts + '</div>';
+    frontdeskCard.querySelectorAll('.opt-chip').forEach(function(chip){
+      chip.addEventListener('click', function(){
+        textInput.value = chip.getAttribute('data-opt');
+        sendCommand();
+      });
+    });
+  }
+
+  function handleResult(result){
+    if (result.status === 'done') {
+      showResponse(JSON.stringify(result.result, null, 0));
+    } else if (result.status === 'needs_confirmation') {
+      renderConfirm(result.call, result.reason, result.level, result.requires_typed_confirmation);
+    } else if (result.status === 'frontdesk') {
+      renderFrontdesk(result.step);
+    } else if (result.status === 'frontdesk_done') {
+      frontdeskCard.hidden = true;
+      frontdeskActive = false;
+      var r = result.result || {};
+      showResponse(r.state === 'ORDER_LOCKED' ? '已經幫你送出給AERIS處理了' : '已取消這次的問題引導');
+    } else if (result.status === 'error') {
+      showResponse('發生問題：' + result.reason);
+    }
+  }
+
+  function sendCommand(){
+    var text = textInput.value.trim();
+    if (!text) return;
+    showTranscript(text);
+    textInput.value = '';
+    sendBtn.disabled = true;
+    var req = frontdeskActive
+      ? fetch('/api/frontdesk_reply', {
+          method: 'POST', headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({session_id: sessionId, reply: text}),
+        })
+      : fetch('/api/command', {
+          method: 'POST', headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({text: text, session_id: sessionId}),
+        });
+    req.then(function(r){ return r.json(); }).then(function(result){
+      handleResult(result);
+    }).catch(function(){
+      showResponse('連不到語音助理伺服器，請確認 serve.py 有在跑');
+    }).finally(function(){
+      sendBtn.disabled = false;
+    });
+  }
+
+  sendBtn.addEventListener('click', sendCommand);
+  textInput.addEventListener('keydown', function(e){
+    if (e.key === 'Enter') sendCommand();
+  });
+})();
+</script>
+</body>
+</html>

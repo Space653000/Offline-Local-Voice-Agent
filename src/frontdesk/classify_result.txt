@@ -1,0 +1,8 @@
+打開瀏覽器 -> {'mode': 'desktop_control'}
+把音量調大一點 -> {'mode': 'desktop_control'}
+NB喇叭低頻好像有問題 -> {'mode': 'acoustic_engineering'}
+這顆speaker 180到500Hz SPL掉了4dB -> {'mode': 'acoustic_engineering'}
+幫我開啟檔案總管 -> {'mode': 'desktop_control'}
+這個麥克風收音怎麼那麼多雜訊 -> {'mode': 'acoustic_engineering'}
+提醒我晚上八點吃藥 -> {'mode': 'desktop_control'}
+這個THD失真是不是driver的問題 -> {'mode': 'desktop_control'}

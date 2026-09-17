@@ -1,0 +1,1 @@
+已關閉 pid=13972（CalculatorApp.exe，視窗已最小化找不到頂層視窗，改用行程終止的備援方式：No windows for that process could be found）

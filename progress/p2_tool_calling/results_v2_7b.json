@@ -1,0 +1,831 @@
+{
+  "accuracy": 0.970873786407767,
+  "accuracy_clean": 0.968421052631579,
+  "n": 103,
+  "results": [
+    {
+      "idx": 1,
+      "sentence": "打開瀏覽器",
+      "expected": "open_app",
+      "predicted": "open_app",
+      "ok": true,
+      "elapsed_s": 0.604
+    },
+    {
+      "idx": 2,
+      "sentence": "打開小算盤",
+      "expected": "open_app",
+      "predicted": "open_app",
+      "ok": true,
+      "elapsed_s": 0.199
+    },
+    {
+      "idx": 3,
+      "sentence": "關掉這個視窗",
+      "expected": "close_window",
+      "predicted": "close_window",
+      "ok": true,
+      "elapsed_s": 0.205
+    },
+    {
+      "idx": 4,
+      "sentence": "把音量調大一點",
+      "expected": "set_volume",
+      "predicted": "set_volume",
+      "ok": true,
+      "elapsed_s": 0.395
+    },
+    {
+      "idx": 5,
+      "sentence": "把音量調小一點",
+      "expected": "set_volume",
+      "predicted": "set_volume",
+      "ok": true,
+      "elapsed_s": 0.434
+    },
+    {
+      "idx": 6,
+      "sentence": "現在幾點",
+      "expected": "get_datetime",
+      "predicted": "get_datetime",
+      "ok": true,
+      "elapsed_s": 0.217
+    },
+    {
+      "idx": 7,
+      "sentence": "今天星期幾",
+      "expected": "get_datetime",
+      "predicted": "get_datetime",
+      "ok": true,
+      "elapsed_s": 0.198
+    },
+    {
+      "idx": 8,
+      "sentence": "明天天氣怎麼樣",
+      "expected": "get_weather",
+      "predicted": "get_weather",
+      "ok": true,
+      "elapsed_s": 0.202
+    },
+    {
+      "idx": 9,
+      "sentence": "幫我開啟檔案總管",
+      "expected": "open_app",
+      "predicted": "open_app",
+      "ok": true,
+      "elapsed_s": 0.194
+    },
+    {
+      "idx": 10,
+      "sentence": "幫我搜尋這台電腦裡的文件",
+      "expected": "file_op",
+      "predicted": "file_op",
+      "ok": true,
+      "elapsed_s": 0.193
+    },
+    {
+      "idx": 11,
+      "sentence": "把螢幕亮度調高",
+      "expected": "adjust_brightness",
+      "predicted": "adjust_brightness",
+      "ok": true,
+      "elapsed_s": 0.222
+    },
+    {
+      "idx": 12,
+      "sentence": "把螢幕亮度調低",
+      "expected": "adjust_brightness",
+      "predicted": "adjust_brightness",
+      "ok": true,
+      "elapsed_s": 0.2
+    },
+    {
+      "idx": 13,
+      "sentence": "截圖一下這個畫面",
+      "expected": "take_screenshot",
+      "predicted": "take_screenshot",
+      "ok": true,
+      "elapsed_s": 0.237
+    },
+    {
+      "idx": 14,
+      "sentence": "複製這段文字",
+      "expected": "clipboard_op",
+      "predicted": "clipboard_op",
+      "ok": true,
+      "elapsed_s": 0.201
+    },
+    {
+      "idx": 15,
+      "sentence": "貼上到這個欄位",
+      "expected": "clipboard_op",
+      "predicted": "text_input_op",
+      "ok": false,
+      "elapsed_s": 0.231
+    },
+    {
+      "idx": 16,
+      "sentence": "刪除這個檔案",
+      "expected": "file_op",
+      "predicted": "file_op",
+      "ok": true,
+      "elapsed_s": 0.199
+    },
+    {
+      "idx": 17,
+      "sentence": "把這個資料夾重新命名",
+      "expected": "file_op",
+      "predicted": "file_op",
+      "ok": true,
+      "elapsed_s": 0.214
+    },
+    {
+      "idx": 18,
+      "sentence": "建立一個新的資料夾",
+      "expected": "file_op",
+      "predicted": "file_op",
+      "ok": true,
+      "elapsed_s": 0.215
+    },
+    {
+      "idx": 19,
+      "sentence": "切換到下一個視窗",
+      "expected": "window_op",
+      "predicted": "window_op",
+      "ok": true,
+      "elapsed_s": 0.223
+    },
+    {
+      "idx": 20,
+      "sentence": "最小化所有視窗",
+      "expected": "window_op",
+      "predicted": "window_op",
+      "ok": true,
+      "elapsed_s": 0.221
+    },
+    {
+      "idx": 21,
+      "sentence": "把這個視窗放到全螢幕",
+      "expected": "window_op",
+      "predicted": "window_op",
+      "ok": true,
+      "elapsed_s": 0.197
+    },
+    {
+      "idx": 22,
+      "sentence": "關閉所有正在執行的程式",
+      "expected": "window_op",
+      "predicted": "window_op",
+      "ok": true,
+      "elapsed_s": 0.197
+    },
+    {
+      "idx": 23,
+      "sentence": "重新啟動電腦",
+      "expected": "power_op",
+      "predicted": "power_op",
+      "ok": true,
+      "elapsed_s": 0.205
+    },
+    {
+      "idx": 24,
+      "sentence": "把電腦關機",
+      "expected": "power_op",
+      "predicted": "power_op",
+      "ok": true,
+      "elapsed_s": 0.222
+    },
+    {
+      "idx": 25,
+      "sentence": "讓電腦進入休眠模式",
+      "expected": "power_op",
+      "predicted": "power_op",
+      "ok": true,
+      "elapsed_s": 0.212
+    },
+    {
+      "idx": 26,
+      "sentence": "打開設定",
+      "expected": "open_app",
+      "predicted": "open_app",
+      "ok": true,
+      "elapsed_s": 0.196
+    },
+    {
+      "idx": 27,
+      "sentence": "打開控制台",
+      "expected": "open_app",
+      "predicted": "open_app",
+      "ok": true,
+      "elapsed_s": 0.218
+    },
+    {
+      "idx": 28,
+      "sentence": "打開工作管理員",
+      "expected": "open_app",
+      "predicted": "open_app",
+      "ok": true,
+      "elapsed_s": 0.187
+    },
+    {
+      "idx": 29,
+      "sentence": "查看目前的網路連線狀態",
+      "expected": "network_toggle",
+      "predicted": "network_toggle",
+      "ok": true,
+      "elapsed_s": 0.2
+    },
+    {
+      "idx": 30,
+      "sentence": "把 Wi-Fi 關掉",
+      "expected": "network_toggle",
+      "predicted": "network_toggle",
+      "ok": true,
+      "elapsed_s": 0.223
+    },
+    {
+      "idx": 31,
+      "sentence": "把 Wi-Fi 打開",
+      "expected": "network_toggle",
+      "predicted": "network_toggle",
+      "ok": true,
+      "elapsed_s": 0.217
+    },
+    {
+      "idx": 32,
+      "sentence": "把藍牙打開",
+      "expected": "network_toggle",
+      "predicted": "network_toggle",
+      "ok": true,
+      "elapsed_s": 0.207
+    },
+    {
+      "idx": 33,
+      "sentence": "把藍牙關掉",
+      "expected": "network_toggle",
+      "predicted": "network_toggle",
+      "ok": true,
+      "elapsed_s": 0.197
+    },
+    {
+      "idx": 34,
+      "sentence": "播放這首音樂",
+      "expected": "media_control",
+      "predicted": "media_control",
+      "ok": true,
+      "elapsed_s": 0.207
+    },
+    {
+      "idx": 35,
+      "sentence": "暫停音樂",
+      "expected": "media_control",
+      "predicted": "media_control",
+      "ok": true,
+      "elapsed_s": 0.211
+    },
+    {
+      "idx": 36,
+      "sentence": "下一首歌",
+      "expected": "media_control",
+      "predicted": "media_control",
+      "ok": true,
+      "elapsed_s": 0.204
+    },
+    {
+      "idx": 37,
+      "sentence": "上一首歌",
+      "expected": "media_control",
+      "predicted": "media_control",
+      "ok": true,
+      "elapsed_s": 0.194
+    },
+    {
+      "idx": 38,
+      "sentence": "把音樂靜音",
+      "expected": "media_control",
+      "predicted": "media_control",
+      "ok": true,
+      "elapsed_s": 0.41
+    },
+    {
+      "idx": 39,
+      "sentence": "打開行事曆",
+      "expected": "open_app",
+      "predicted": "open_app",
+      "ok": true,
+      "elapsed_s": 0.195
+    },
+    {
+      "idx": 40,
+      "sentence": "新增一個明天下午三點的會議",
+      "expected": "calendar_op",
+      "predicted": "calendar_op",
+      "ok": true,
+      "elapsed_s": 0.197
+    },
+    {
+      "idx": 41,
+      "sentence": "提醒我晚上八點吃藥",
+      "expected": "reminder_op",
+      "predicted": "reminder_op",
+      "ok": true,
+      "elapsed_s": 0.203
+    },
+    {
+      "idx": 42,
+      "sentence": "幫我記錄一下今天的待辦事項",
+      "expected": "reminder_op",
+      "predicted": "reminder_op",
+      "ok": true,
+      "elapsed_s": 0.193
+    },
+    {
+      "idx": 43,
+      "sentence": "把這份文件另存成 PDF",
+      "expected": "file_op",
+      "predicted": "file_op",
+      "ok": true,
+      "elapsed_s": 0.21
+    },
+    {
+      "idx": 44,
+      "sentence": "列印這份文件",
+      "expected": "print_or_scan",
+      "predicted": "print_or_scan",
+      "ok": true,
+      "elapsed_s": 0.216
+    },
+    {
+      "idx": 45,
+      "sentence": "掃描這份文件",
+      "expected": "print_or_scan",
+      "predicted": "print_or_scan",
+      "ok": true,
+      "elapsed_s": 0.241
+    },
+    {
+      "idx": 46,
+      "sentence": "把這張照片編輯一下",
+      "expected": "photo_edit",
+      "predicted": "photo_edit",
+      "ok": true,
+      "elapsed_s": 0.207
+    },
+    {
+      "idx": 47,
+      "sentence": "把這張照片旋轉九十度",
+      "expected": "photo_edit",
+      "predicted": "photo_edit",
+      "ok": true,
+      "elapsed_s": 0.201
+    },
+    {
+      "idx": 48,
+      "sentence": "放大這張圖片",
+      "expected": "photo_edit",
+      "predicted": "photo_edit",
+      "ok": true,
+      "elapsed_s": 0.196
+    },
+    {
+      "idx": 49,
+      "sentence": "縮小這張圖片",
+      "expected": "photo_edit",
+      "predicted": "photo_edit",
+      "ok": true,
+      "elapsed_s": 0.208
+    },
+    {
+      "idx": 50,
+      "sentence": "打開記事本",
+      "expected": "open_app",
+      "predicted": "open_app",
+      "ok": true,
+      "elapsed_s": 0.207
+    },
+    {
+      "idx": 51,
+      "sentence": "輸入一段文字",
+      "expected": "text_input_op",
+      "predicted": "text_input_op",
+      "ok": true,
+      "elapsed_s": 0.235
+    },
+    {
+      "idx": 52,
+      "sentence": "把這段文字轉成語音",
+      "expected": "text_to_speech_op",
+      "predicted": "text_to_speech_op",
+      "ok": true,
+      "elapsed_s": 0.262
+    },
+    {
+      "idx": 53,
+      "sentence": "把這段語音轉成文字",
+      "expected": "speech_to_text_op",
+      "predicted": "speech_to_text_op",
+      "ok": true,
+      "elapsed_s": 0.25
+    },
+    {
+      "idx": 54,
+      "sentence": "翻譯這句話成英文",
+      "expected": "translate",
+      "predicted": "translate",
+      "ok": true,
+      "elapsed_s": 0.195
+    },
+    {
+      "idx": 55,
+      "sentence": "翻譯這句話成日文",
+      "expected": "translate",
+      "predicted": "translate",
+      "ok": true,
+      "elapsed_s": 0.175
+    },
+    {
+      "idx": 56,
+      "sentence": "查一下今天的匯率",
+      "expected": "get_exchange_rate",
+      "predicted": "get_exchange_rate",
+      "ok": true,
+      "elapsed_s": 0.231
+    },
+    {
+      "idx": 57,
+      "sentence": "查一下明天的天氣預報",
+      "expected": "get_weather",
+      "predicted": "get_weather",
+      "ok": true,
+      "elapsed_s": 0.211
+    },
+    {
+      "idx": 58,
+      "sentence": "幫我訂一個明天早上九點的鬧鐘",
+      "expected": "alarm_op",
+      "predicted": "alarm_op",
+      "ok": true,
+      "elapsed_s": 0.215
+    },
+    {
+      "idx": 59,
+      "sentence": "關掉這個鬧鐘",
+      "expected": "alarm_op",
+      "predicted": "alarm_op",
+      "ok": true,
+      "elapsed_s": 0.195
+    },
+    {
+      "idx": 60,
+      "sentence": "延後十分鐘再提醒我",
+      "expected": "alarm_op",
+      "predicted": "reminder_op",
+      "ok": false,
+      "elapsed_s": 0.205
+    },
+    {
+      "idx": 61,
+      "sentence": "打開計算機幫我算一下三加五乘二",
+      "expected": "calculator",
+      "predicted": "calculator",
+      "ok": true,
+      "elapsed_s": 0.181
+    },
+    {
+      "idx": 62,
+      "sentence": "幫我把這個檔案上傳到雲端",
+      "expected": "cloud_file_op",
+      "predicted": "cloud_file_op",
+      "ok": true,
+      "elapsed_s": 0.242
+    },
+    {
+      "idx": 63,
+      "sentence": "把這個檔案下載下來",
+      "expected": "cloud_file_op",
+      "predicted": "cloud_file_op",
+      "ok": true,
+      "elapsed_s": 0.226
+    },
+    {
+      "idx": 64,
+      "sentence": "分享這個檔案給我的同事",
+      "expected": "cloud_file_op",
+      "predicted": "cloud_file_op",
+      "ok": true,
+      "elapsed_s": 0.222
+    },
+    {
+      "idx": 65,
+      "sentence": "打開電子郵件收信",
+      "expected": "email_op",
+      "predicted": "email_op",
+      "ok": true,
+      "elapsed_s": 0.213
+    },
+    {
+      "idx": 66,
+      "sentence": "寄一封信給客戶",
+      "expected": "email_op",
+      "predicted": "email_op",
+      "ok": true,
+      "elapsed_s": 0.212
+    },
+    {
+      "idx": 67,
+      "sentence": "回覆這封郵件",
+      "expected": "email_op",
+      "predicted": "email_op",
+      "ok": true,
+      "elapsed_s": 0.205
+    },
+    {
+      "idx": 68,
+      "sentence": "刪除這封垃圾郵件",
+      "expected": "email_op",
+      "predicted": "email_op",
+      "ok": true,
+      "elapsed_s": 0.209
+    },
+    {
+      "idx": 69,
+      "sentence": "打開視訊會議軟體",
+      "expected": "video_call_op",
+      "predicted": "video_call_op",
+      "ok": true,
+      "elapsed_s": 0.237
+    },
+    {
+      "idx": 70,
+      "sentence": "開始錄影這個畫面",
+      "expected": "record_screen",
+      "predicted": "record_screen",
+      "ok": true,
+      "elapsed_s": 0.205
+    },
+    {
+      "idx": 71,
+      "sentence": "停止錄影",
+      "expected": "record_screen",
+      "predicted": "record_screen",
+      "ok": true,
+      "elapsed_s": 0.193
+    },
+    {
+      "idx": 72,
+      "sentence": "把錄影檔案儲存到桌面",
+      "expected": "file_op",
+      "predicted": "file_op",
+      "ok": true,
+      "elapsed_s": 0.202
+    },
+    {
+      "idx": 73,
+      "sentence": "打開瀏覽器搜尋台北天氣",
+      "expected": "open_app",
+      "predicted": "open_app",
+      "ok": true,
+      "elapsed_s": 0.2
+    },
+    {
+      "idx": 74,
+      "sentence": "打開瀏覽器搜尋最新的科技新聞",
+      "expected": "open_app",
+      "predicted": "open_app",
+      "ok": true,
+      "elapsed_s": 0.201
+    },
+    {
+      "idx": 75,
+      "sentence": "關掉背景音樂",
+      "expected": "media_control",
+      "predicted": "media_control",
+      "ok": true,
+      "elapsed_s": 0.441
+    },
+    {
+      "idx": 76,
+      "sentence": "把系統音量設定成百分之五十",
+      "expected": "set_volume",
+      "predicted": "set_volume",
+      "ok": true,
+      "elapsed_s": 0.425
+    },
+    {
+      "idx": 77,
+      "sentence": "檢查電腦有沒有更新",
+      "expected": "system_maintenance",
+      "predicted": "system_maintenance",
+      "ok": true,
+      "elapsed_s": 0.224
+    },
+    {
+      "idx": 78,
+      "sentence": "安裝最新的系統更新",
+      "expected": "system_maintenance",
+      "predicted": "system_maintenance",
+      "ok": true,
+      "elapsed_s": 0.225
+    },
+    {
+      "idx": 79,
+      "sentence": "掃描電腦有沒有病毒",
+      "expected": "system_maintenance",
+      "predicted": "system_maintenance",
+      "ok": true,
+      "elapsed_s": 0.222
+    },
+    {
+      "idx": 80,
+      "sentence": "清理電腦裡的垃圾檔案",
+      "expected": "system_maintenance",
+      "predicted": "system_maintenance",
+      "ok": true,
+      "elapsed_s": 0.233
+    },
+    {
+      "idx": 81,
+      "sentence": "查看硬碟還有多少空間",
+      "expected": "system_maintenance",
+      "predicted": "system_maintenance",
+      "ok": true,
+      "elapsed_s": 0.216
+    },
+    {
+      "idx": 82,
+      "sentence": "打開任務排程器",
+      "expected": "open_app",
+      "predicted": "open_app",
+      "ok": true,
+      "elapsed_s": 0.199
+    },
+    {
+      "idx": 83,
+      "sentence": "新增一個排程任務",
+      "expected": "task_scheduler_op",
+      "predicted": "task_scheduler_op",
+      "ok": true,
+      "elapsed_s": 0.215
+    },
+    {
+      "idx": 84,
+      "sentence": "把這個程式加到開機自動啟動",
+      "expected": "startup_program_op",
+      "predicted": "startup_program_op",
+      "ok": true,
+      "elapsed_s": 0.219
+    },
+    {
+      "idx": 85,
+      "sentence": "移除這個開機自動啟動的程式",
+      "expected": "startup_program_op",
+      "predicted": "startup_program_op",
+      "ok": true,
+      "elapsed_s": 0.218
+    },
+    {
+      "idx": 86,
+      "sentence": "打開裝置管理員",
+      "expected": "open_app",
+      "predicted": "open_app",
+      "ok": true,
+      "elapsed_s": 0.209
+    },
+    {
+      "idx": 87,
+      "sentence": "檢查顯示卡的驅動程式版本",
+      "expected": "driver_op",
+      "predicted": "driver_op",
+      "ok": true,
+      "elapsed_s": 0.208
+    },
+    {
+      "idx": 88,
+      "sentence": "更新顯示卡驅動程式",
+      "expected": "driver_op",
+      "predicted": "driver_op",
+      "ok": true,
+      "elapsed_s": 0.215
+    },
+    {
+      "idx": 89,
+      "sentence": "打開命令提示字元",
+      "expected": "open_app",
+      "predicted": "open_app",
+      "ok": true,
+      "elapsed_s": 0.194
+    },
+    {
+      "idx": 90,
+      "sentence": "執行這個 PowerShell 指令碼",
+      "expected": "dev_tool_op",
+      "predicted": "dev_tool_op",
+      "ok": true,
+      "elapsed_s": 0.227
+    },
+    {
+      "idx": 91,
+      "sentence": "編譯這個程式",
+      "expected": "dev_tool_op",
+      "predicted": "dev_tool_op",
+      "ok": true,
+      "elapsed_s": 0.226
+    },
+    {
+      "idx": 92,
+      "sentence": "執行這個 Python 腳本",
+      "expected": "dev_tool_op",
+      "predicted": "dev_tool_op",
+      "ok": true,
+      "elapsed_s": 0.216
+    },
+    {
+      "idx": 93,
+      "sentence": "打開 Visual Studio Code",
+      "expected": "open_app",
+      "predicted": "open_app",
+      "ok": true,
+      "elapsed_s": 0.221
+    },
+    {
+      "idx": 94,
+      "sentence": "在這個資料夾裡建立一個新的文字檔",
+      "expected": "file_op",
+      "predicted": "file_op",
+      "ok": true,
+      "elapsed_s": 0.213
+    },
+    {
+      "idx": 95,
+      "sentence": "把這個 GitHub 專案複製到本機",
+      "expected": "git_op",
+      "predicted": "cloud_file_op",
+      "ok": false,
+      "elapsed_s": 0.212
+    },
+    {
+      "idx": 96,
+      "sentence": "提交這次的程式修改",
+      "expected": "git_op",
+      "predicted": "git_op",
+      "ok": true,
+      "elapsed_s": 0.212
+    },
+    {
+      "idx": 97,
+      "sentence": "把修改推送到遠端倉庫",
+      "expected": "git_op",
+      "predicted": "git_op",
+      "ok": true,
+      "elapsed_s": 0.207
+    },
+    {
+      "idx": 98,
+      "sentence": "查看目前的版本控制紀錄",
+      "expected": "git_op",
+      "predicted": "git_op",
+      "ok": true,
+      "elapsed_s": 0.215
+    },
+    {
+      "idx": 99,
+      "sentence": "切換到另一個分支",
+      "expected": "git_op",
+      "predicted": "git_op",
+      "ok": true,
+      "elapsed_s": 0.232
+    },
+    {
+      "idx": 100,
+      "sentence": "建立一個新的分支",
+      "expected": "git_op",
+      "predicted": "git_op",
+      "ok": true,
+      "elapsed_s": 0.205
+    },
+    {
+      "idx": 101,
+      "sentence": "合併這兩個分支",
+      "expected": "git_op",
+      "predicted": "git_op",
+      "ok": true,
+      "elapsed_s": 0.199
+    },
+    {
+      "idx": 102,
+      "sentence": "解決這個合併衝突",
+      "expected": "git_op",
+      "predicted": "git_op",
+      "ok": true,
+      "elapsed_s": 0.203
+    },
+    {
+      "idx": 103,
+      "sentence": "幫我把這份報告整理成重點摘要",
+      "expected": "summarize_doc",
+      "predicted": "summarize_doc",
+      "ok": true,
+      "elapsed_s": 0.237
+    }
+  ]
+}

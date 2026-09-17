@@ -1,0 +1,5 @@
+translate: The weather is very good today.
+summarize: 1. 這台電腦是Surface Laptop Ultra，搭載RTX Spark GPU和ARM64架構的Windows。
+2. 電腦配置統一記憶體64GB。
+3. 語音喚醒詞測試準確率為88.5%。
+4. 成功測試Front Desk多輪對話，並產生ORDER.md文件。

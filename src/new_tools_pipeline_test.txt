@@ -1,0 +1,57 @@
+{
+  "input": "幫我算一下 25乘4加10",
+  "call": {
+    "tool": "calculator",
+    "args": {
+      "expression": "25*4+10"
+    }
+  },
+  "outcome": {
+    "executed": true,
+    "result": "25*4+10 = 110"
+  }
+}
+
+{
+  "input": "把這句話翻譯成日文：今天天氣很好",
+  "call": {
+    "tool": "translate",
+    "args": {
+      "text": "今天天氣很好",
+      "target_language": "日文"
+    }
+  },
+  "outcome": {
+    "executed": true,
+    "result": "今日は天気がとても良いです"
+  }
+}
+
+{
+  "input": "把目前的視窗切換到下一個",
+  "call": {
+    "tool": "window_op",
+    "args": {
+      "action": "switch_next"
+    }
+  },
+  "outcome": {
+    "executed": true,
+    "result": "已切換到下一個視窗"
+  }
+}
+
+{
+  "input": "幫我把音樂暫停",
+  "call": {
+    "tool": "media_control",
+    "args": {
+      "action": "mute"
+    }
+  },
+  "outcome": {
+    "executed": true,
+    "result": "已送出媒體鍵：靜音切換"
+  }
+}
+
