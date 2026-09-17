@@ -1,0 +1,381 @@
+{
+  "session_id": "kpi-test-1789654677",
+  "summary": {
+    "n_commands": 20,
+    "tool_routing_accuracy": 1.0,
+    "tool_execution_success_rate": 1.0,
+    "round_trip_ms": {
+      "note": "整個HTTP往返（LLM決策+工具真的執行完）時間，工具執行時間依動作本身性質可能差很多（例如唸一長句子）",
+      "avg": 827.0,
+      "min": 464.1,
+      "max": 3206.0,
+      "p50": 660.2,
+      "p95": 3206.0
+    },
+    "decision_latency_ms": {
+      "note": "只算LLM判斷該呼叫哪個工具的時間，扣掉工具本身執行時間——對應藍圖「ASR→Tool決策」這一段",
+      "avg": 638.7,
+      "min": 464.1,
+      "max": 1127.4,
+      "p50": 603.6,
+      "p95": 1127.4
+    },
+    "executor_duration_ms": {
+      "avg": 188.33,
+      "min": 0.0,
+      "max": 2494.570732116699
+    },
+    "kpi_targets_from_blueprint": {
+      "tool_execution_success_rate_target": ">= 0.98",
+      "tool_execution_success_rate_actual": 1.0,
+      "tool_execution_success_rate_pass": true,
+      "asr_to_tool_decision_target_ms": "< 2000",
+      "decision_latency_p95_ms": 1127.4,
+      "decision_latency_p95_under_2s": true
+    }
+  },
+  "per_command": [
+    {
+      "text": "現在幾點",
+      "expected_tool": "get_datetime",
+      "actual_tool": "get_datetime",
+      "tool_match": true,
+      "executed": true,
+      "round_trip_ms": 660.2,
+      "status": "done",
+      "executor_duration_ms": 0.0,
+      "decision_latency_ms": 660.2
+    },
+    {
+      "text": "現在是幾點幾分",
+      "expected_tool": "get_datetime",
+      "actual_tool": "get_datetime",
+      "tool_match": true,
+      "executed": true,
+      "round_trip_ms": 465.3,
+      "status": "done",
+      "executor_duration_ms": 0.0,
+      "decision_latency_ms": 465.3
+    },
+    {
+      "text": "把音量調到50%",
+      "expected_tool": "set_volume",
+      "actual_tool": "set_volume",
+      "tool_match": true,
+      "executed": true,
+      "round_trip_ms": 698.4,
+      "status": "done",
+      "executor_duration_ms": 94.84148025512695,
+      "decision_latency_ms": 603.6
+    },
+    {
+      "text": "把音量調到70%",
+      "expected_tool": "set_volume",
+      "actual_tool": "set_volume",
+      "tool_match": true,
+      "executed": true,
+      "round_trip_ms": 618.4,
+      "status": "done",
+      "executor_duration_ms": 45.33696174621582,
+      "decision_latency_ms": 573.1
+    },
+    {
+      "text": "音量調高一點",
+      "expected_tool": "set_volume",
+      "actual_tool": "set_volume",
+      "tool_match": true,
+      "executed": true,
+      "round_trip_ms": 611.5,
+      "status": "done",
+      "executor_duration_ms": 37.04404830932617,
+      "decision_latency_ms": 574.5
+    },
+    {
+      "text": "幫我截圖",
+      "expected_tool": "take_screenshot",
+      "actual_tool": "take_screenshot",
+      "tool_match": true,
+      "executed": true,
+      "round_trip_ms": 656.7,
+      "status": "done",
+      "executor_duration_ms": 71.7916488647461,
+      "decision_latency_ms": 584.9
+    },
+    {
+      "text": "螢幕截圖",
+      "expected_tool": "take_screenshot",
+      "actual_tool": "take_screenshot",
+      "tool_match": true,
+      "executed": true,
+      "round_trip_ms": 557.8,
+      "status": "done",
+      "executor_duration_ms": 68.54939460754395,
+      "decision_latency_ms": 489.3
+    },
+    {
+      "text": "算一下25乘以4",
+      "expected_tool": "calculator",
+      "actual_tool": "calculator",
+      "tool_match": true,
+      "executed": true,
+      "round_trip_ms": 705.4,
+      "status": "done",
+      "executor_duration_ms": 0.0,
+      "decision_latency_ms": 705.4
+    },
+    {
+      "text": "100除以4等於多少",
+      "expected_tool": "calculator",
+      "actual_tool": "calculator",
+      "tool_match": true,
+      "executed": true,
+      "round_trip_ms": 754.2,
+      "status": "done",
+      "executor_duration_ms": 0.0,
+      "decision_latency_ms": 754.2
+    },
+    {
+      "text": "3加5再乘以2",
+      "expected_tool": "calculator",
+      "actual_tool": "calculator",
+      "tool_match": true,
+      "executed": true,
+      "round_trip_ms": 662.8,
+      "status": "done",
+      "executor_duration_ms": 0.0,
+      "decision_latency_ms": 662.8
+    },
+    {
+      "text": "唸出這句話：現在開始量測",
+      "expected_tool": "text_to_speech_op",
+      "actual_tool": "text_to_speech_op",
+      "tool_match": true,
+      "executed": true,
+      "round_trip_ms": 3206.0,
+      "status": "done",
+      "executor_duration_ms": 2494.570732116699,
+      "decision_latency_ms": 711.4
+    },
+    {
+      "text": "把這句話翻譯成英文：你好嗎",
+      "expected_tool": "translate",
+      "actual_tool": "translate",
+      "tool_match": true,
+      "executed": true,
+      "round_trip_ms": 910.7,
+      "status": "done",
+      "executor_duration_ms": 170.66383361816406,
+      "decision_latency_ms": 740.0
+    },
+    {
+      "text": "幫我整理重點：今天天氣很好，適合出門走走，記得帶雨傘以防萬一",
+      "expected_tool": "summarize_doc",
+      "actual_tool": "summarize_doc",
+      "tool_match": true,
+      "executed": true,
+      "round_trip_ms": 1858.3,
+      "status": "done",
+      "executor_duration_ms": 730.8812141418457,
+      "decision_latency_ms": 1127.4
+    },
+    {
+      "text": "顯示桌面",
+      "expected_tool": "window_op",
+      "actual_tool": "window_op",
+      "tool_match": true,
+      "executed": true,
+      "round_trip_ms": 680.1,
+      "status": "done",
+      "executor_duration_ms": 0.0,
+      "decision_latency_ms": 680.1
+    },
+    {
+      "text": "切換到下一個視窗",
+      "expected_tool": "window_op",
+      "actual_tool": "window_op",
+      "tool_match": true,
+      "executed": true,
+      "round_trip_ms": 601.1,
+      "status": "done",
+      "executor_duration_ms": 3.0803680419921875,
+      "decision_latency_ms": 598.0
+    },
+    {
+      "text": "複製這段文字到剪貼簿：hello world",
+      "expected_tool": "clipboard_op",
+      "actual_tool": "clipboard_op",
+      "tool_match": true,
+      "executed": true,
+      "round_trip_ms": 762.8,
+      "status": "done",
+      "executor_duration_ms": 43.98179054260254,
+      "decision_latency_ms": 718.8
+    },
+    {
+      "text": "貼上剪貼簿的內容",
+      "expected_tool": "clipboard_op",
+      "actual_tool": "clipboard_op",
+      "tool_match": true,
+      "executed": true,
+      "round_trip_ms": 550.3,
+      "status": "done",
+      "executor_duration_ms": 0.0,
+      "decision_latency_ms": 550.3
+    },
+    {
+      "text": "查詢目前最前面的視窗是什麼",
+      "expected_tool": "get_active_window",
+      "actual_tool": "get_active_window",
+      "tool_match": true,
+      "executed": true,
+      "round_trip_ms": 537.8,
+      "status": "done",
+      "executor_duration_ms": 5.957603454589844,
+      "decision_latency_ms": 531.8
+    },
+    {
+      "text": "列出目前開著的所有視窗",
+      "expected_tool": "list_windows",
+      "actual_tool": "list_windows",
+      "tool_match": true,
+      "executed": true,
+      "round_trip_ms": 464.1,
+      "status": "done",
+      "executor_duration_ms": 0.0,
+      "decision_latency_ms": 464.1
+    },
+    {
+      "text": "按下escape鍵",
+      "expected_tool": "press_key",
+      "actual_tool": "press_key",
+      "tool_match": true,
+      "executed": true,
+      "round_trip_ms": 578.7,
+      "status": "done",
+      "executor_duration_ms": 0.0,
+      "decision_latency_ms": 578.7
+    }
+  ],
+  "audit_db_rows": [
+    {
+      "tool": "get_datetime",
+      "executed": 1,
+      "duration_ms": 0.0,
+      "error": null
+    },
+    {
+      "tool": "get_datetime",
+      "executed": 1,
+      "duration_ms": 0.0,
+      "error": null
+    },
+    {
+      "tool": "set_volume",
+      "executed": 1,
+      "duration_ms": 94.84148025512695,
+      "error": null
+    },
+    {
+      "tool": "set_volume",
+      "executed": 1,
+      "duration_ms": 45.33696174621582,
+      "error": null
+    },
+    {
+      "tool": "set_volume",
+      "executed": 1,
+      "duration_ms": 37.04404830932617,
+      "error": null
+    },
+    {
+      "tool": "take_screenshot",
+      "executed": 1,
+      "duration_ms": 71.7916488647461,
+      "error": null
+    },
+    {
+      "tool": "take_screenshot",
+      "executed": 1,
+      "duration_ms": 68.54939460754395,
+      "error": null
+    },
+    {
+      "tool": "calculator",
+      "executed": 1,
+      "duration_ms": 0.0,
+      "error": null
+    },
+    {
+      "tool": "calculator",
+      "executed": 1,
+      "duration_ms": 0.0,
+      "error": null
+    },
+    {
+      "tool": "calculator",
+      "executed": 1,
+      "duration_ms": 0.0,
+      "error": null
+    },
+    {
+      "tool": "text_to_speech_op",
+      "executed": 1,
+      "duration_ms": 2494.570732116699,
+      "error": null
+    },
+    {
+      "tool": "translate",
+      "executed": 1,
+      "duration_ms": 170.66383361816406,
+      "error": null
+    },
+    {
+      "tool": "summarize_doc",
+      "executed": 1,
+      "duration_ms": 730.8812141418457,
+      "error": null
+    },
+    {
+      "tool": "window_op",
+      "executed": 1,
+      "duration_ms": 0.0,
+      "error": null
+    },
+    {
+      "tool": "window_op",
+      "executed": 1,
+      "duration_ms": 3.0803680419921875,
+      "error": null
+    },
+    {
+      "tool": "clipboard_op",
+      "executed": 1,
+      "duration_ms": 43.98179054260254,
+      "error": null
+    },
+    {
+      "tool": "clipboard_op",
+      "executed": 1,
+      "duration_ms": 0.0,
+      "error": null
+    },
+    {
+      "tool": "get_active_window",
+      "executed": 1,
+      "duration_ms": 5.957603454589844,
+      "error": null
+    },
+    {
+      "tool": "list_windows",
+      "executed": 1,
+      "duration_ms": 0.0,
+      "error": null
+    },
+    {
+      "tool": "press_key",
+      "executed": 1,
+      "duration_ms": 0.0,
+      "error": null
+    }
+  ]
+}

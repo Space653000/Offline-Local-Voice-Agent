@@ -126,6 +126,10 @@
 2. 直接測L3決策：隨口說「對阿好」→ 正確拒絕（approved=False）；講出關鍵字「確認執行」→ 正確通過（approved=True）
 3. 過程中順便發現並修正一個真實風險分級問題：`network_toggle`（Wi-Fi開關）原本設L1（免確認），但意識到關Wi-Fi可能打斷使用者在同一台電腦上的其他網路活動（下載/通話/瀏覽），不是「可逆」就等於「低風險」，升級成L2
 
+## 補測2項KPI：工具執行成功率、ASR→Tool決策延遲（對照 docs/07 進度報告第9節）
+
+利用上面Logging補上的`duration_ms`資料，寫了`progress/p4_kpi_measurement/run_kpi_test.py`跑20句涵蓋17個已實作工具的真實指令（完整方法論見該資料夾`REPORT.md`）：**工具執行成功率100%**（目標≥98%）、**ASR→Tool決策延遲p95 1.13秒**（目標<2秒，量測時刻意把工具本身執行時間跟LLM決策時間分開算，避免例如「唸一句話要花多久」這種跟延遲無關的時間污染數字）。8項KPI裡目前4項有正式數字，剩下的喚醒詞8小時誤觸發率需要真的連續監聽8小時，是唯一需要長時間背景執行才能測的一項，留到之後有更長時間窗口再處理。
+
 ## 補齊 Memory（第13節）跟 Logging（第14節）的資料表缺口（對照 docs/07 進度報告第7、8節）
 
 `docs/07`第7、8節指出：藍圖第13節要求的5類記憶（Session Context/User Preferences/Known Apps/Known Folders/Command History）只有Command History勉強算做了一半，其餘4類完全空白；第14節要求的10個Logging欄位（Timestamp/Voice transcription/Intent/Plan/Tool/Arguments/Permission level/Execution result/Duration/Error）裡，Duration/Error/Intent三個完全沒有，`conversation_log`跟`action_audit`兩表也沒有共同ID可以join。這次補上：
