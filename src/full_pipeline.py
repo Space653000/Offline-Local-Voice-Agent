@@ -51,6 +51,7 @@ IMPLEMENTED_TOOLS_SPEC = """
   args: {"pid": 數字, "control_name": "要點的按鈕/控制項上顯示的文字"}
 - uia_set_text：把文字設定到某個視窗裡指定的輸入欄位（不是打到目前游標位置，是精確指定欄位）。
   args: {"pid": 數字, "control_name": "欄位名稱或標籤文字", "text": "要填入的內容"}
+  （像記事本這種主要編輯區沒有明顯標籤文字時，control_name可以填"內容"）
 - uia_select：在某個視窗的清單/下拉選單裡選擇一個項目。
   args: {"pid": 數字, "control_name": "清單/下拉選單的名稱", "item_name": "要選的項目文字"}
 - press_key：按一個單獨的鍵（例如Enter、Escape、Tab、方向鍵、F1-F12）。args: {"key": "enter"}

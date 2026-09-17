@@ -6,6 +6,7 @@
 """
 import subprocess
 import sys
+import ctypes
 import datetime
 from pathlib import Path
 
@@ -32,7 +33,10 @@ def open_app(app_name: str) -> dict:
     if not exe:
         raise ValueError(f"不在白名單內的應用程式：{app_name}（安全設計：只能開白名單裡的程式，不接受任意字串）")
 
-    real_name = REAL_PROCESS_NAME.get(exe, exe)
+    # exe現在可能是完整路徑（例如 C:\Windows\System32\notepad.exe），REAL_PROCESS_NAME這張表
+    # 的key是短檔名，要用basename去對照，不能拿完整路徑字串直接查表。
+    exe_basename = Path(exe).name if not exe.endswith(":") else exe
+    real_name = REAL_PROCESS_NAME.get(exe_basename, exe_basename)
     before = _running_pids(real_name)
     subprocess.Popen(["cmd", "/c", "start", "", exe] if exe.endswith(":") else [exe])
 
@@ -584,12 +588,44 @@ def _connect_uia_top_window(pid: int):
     return app.top_window()
 
 
+_MAIN_TEXT_AREA_KEYWORDS = ("內容", "編輯區", "文字區", "document", "editor", "正文")
+
+
 def _find_uia_control(top_window, name: str):
+    """
+    對照docs/07進度報告P3驗收劇本實測時發現的真實情況：像記事本的主要編輯區這種控制項，
+    UIA的window_text()本身是空字串（不是沒有名稱可以顯示，是這個控制項本身就沒有文字標籤，
+    跟按鈕不一樣）——如果直接照字面比對名稱，永遠找不到。加一個備援：如果呼叫方用這幾個
+    常見的「主要內容區」關鍵字，且視窗裡剛好只有一個Document/Edit類型的控制項，就直接給那個，
+    不需要使用者/LLM知道UIA內部把它叫做空字串這種實作細節。
+    """
     all_ctrls = top_window.descendants()
+    name_lower = name.strip().lower()
+    if name_lower in _MAIN_TEXT_AREA_KEYWORDS:
+        text_areas = [c for c in all_ctrls if c.element_info.control_type in ("Document", "Edit")]
+        if len(text_areas) == 1:
+            return text_areas[0]
+        if len(text_areas) > 1:
+            raise ValueError(f"這個視窗裡有 {len(text_areas)} 個文字編輯區，無法判斷要操作哪一個")
+
     candidates = [c for c in all_ctrls if name in (c.window_text() or "")]
     if not candidates:
         raise ValueError(f"在這個視窗裡找不到名稱包含「{name}」的控制項")
     if len(candidates) > 1:
+        # 常見情況1：一個按鈕(Button)底下常常跟著一個顯示同樣文字的子元素(Static/Text)，
+        # UIA會把兩個都列成「名稱包含這個字」的候選——這不是真的兩個不同東西可以選，
+        # 只要其中剛好只有一個是可互動的類型(Button/MenuItem/ListItem/TabItem等)，
+        # 就是使用者真正想操作的那個，不用因為這種UIA樹狀結構的細節就報錯要求更精確名稱。
+        interactive = [c for c in candidates
+                       if c.element_info.control_type in ("Button", "MenuItem", "ListItem", "TabItem", "CheckBox", "RadioButton")]
+        if len(interactive) == 1:
+            return interactive[0]
+        # 常見情況2：像選單裡「儲存」跟「全部儲存」這種一個名稱是另一個的子字串，substring
+        # 比對會誤抓到兩個完全不同的選項——如果剛好有「文字完全相等」的候選，那個才是使用者
+        # 真正要的，不該被「文字比較長但也包含這個字」的其他選項卡到變成假的模糊不清。
+        exact = [c for c in interactive if (c.window_text() or "").strip() == name.strip()]
+        if len(exact) == 1:
+            return exact[0]
         raise ValueError(f"名稱包含「{name}」的控制項有 {len(candidates)} 個，無法判斷要操作哪一個，請給更精確的名稱")
     return candidates[0]
 
@@ -605,11 +641,38 @@ def uia_set_text(pid: int, control_name: str, text: str) -> str:
     """
     跟 text_input_op 的差別：這裡是真的用UIA找到指定的輸入欄位再設值，不是SendKeys盲打到
     目前作用中欄位——如果游標不在正確位置，SendKeys會打錯地方，這個工具不會有這個問題。
+
+    實測踩坑記錄（P3驗收劇本用記事本測試時抓到，兩個真實bug）：
+    1. pywinauto的`set_text()`不是每種UIA控制項都有——記事本的主編輯區被歸類成"Document"
+       類型，pywinauto把它包成通用的UIAWrapper，沒有`set_text()`這個方法，直接呼叫會丟
+       AttributeError。改成分層嘗試處理。
+    2. **更關鍵的一個**：一開始改用UIA的ValuePattern直接設值（`iface_value.SetValue()`），
+       這樣呼叫確實會把文字設進去、畫面上也看得到，但**這個控制項並沒有真的取得鍵盤輸入焦點**
+       ——之後送出的`hotkey()`/`press_key()`（底層用`win32api.keybd_event`）完全沒有反應
+       （測試過送Ctrl+S要存檔、送單一字元'a'，記事本內容跟存檔狀態都毫無變化）。實測換成
+       pywinauto的`click_input()`（真的模擬滑鼠點擊）之後再操作，同一個視窗就正常回應了——
+       證實问题是「視窗在最前面」跟「視窗裡的某個控制項真的有輸入焦點」是兩件不同的事，
+       尤其對新版WinUI/XAML應用程式（新版記事本就是）更明顯。修法：一律先真的點擊一次
+       目標控制項建立焦點，再決定要用哪種方式設值，之後的hotkey/press_key才會生效。
     """
     top = _connect_uia_top_window(pid)
     ctrl = _find_uia_control(top, control_name)
-    ctrl.set_text(text)
-    return f"已將「{control_name}」的內容設定為：{text[:30]}{'...' if len(text) > 30 else ''}"
+    ctrl.click_input()  # 先建立真正的輸入焦點，不只是讓視窗在最前面
+
+    if hasattr(ctrl, "set_text"):
+        ctrl.set_text(text)
+        return f"已將「{control_name}」的內容設定為：{text[:30]}{'...' if len(text) > 30 else ''}"
+
+    try:
+        value_pattern = ctrl.iface_value
+        value_pattern.SetValue(text)
+        return f"已將「{control_name}」的內容設定為：{text[:30]}{'...' if len(text) > 30 else ''}"
+    except Exception:
+        pass
+
+    escaped = "".join(f"{{{c}}}" if c in "+^%~(){}[]" else c for c in text)
+    ctrl.type_keys(escaped, with_spaces=True)
+    return f"已將「{control_name}」的內容設定為：{text[:30]}{'...' if len(text) > 30 else ''}（用模擬打字，因為這個控制項不支援直接設值)"
 
 
 def uia_select(pid: int, control_name: str, item_name: str) -> str:
@@ -663,24 +726,54 @@ def _parse_key_combo(keys: str):
     return vks
 
 
+# 實測踩坑記錄（P3驗收劇本用記事本測試時抓到的關鍵bug）：press_key/hotkey原本用
+# win32api.keybd_event()（舊式、低階的鍵盤事件模擬API）送鍵，這對小畫家這種傳統Win32
+# 應用程式沒問題（補UIA原語那批已經測過Ctrl+Z/Escape都正確送達），但對新版記事本這種
+# WinUI/XAML應用程式完全沒有反應——連最簡單的單一字元'a'都送不進去、Ctrl+S/Ctrl+N這種
+# 視窗層級的快捷鍵也毫無反應，即使當時視窗確實在最前面。改用SendInput（Windows官方建議
+# 取代keybd_event的現代API，pywinauto的type_keys()底層也是用這個）之後，同一個記事本
+# 視窗才正常回應。這代表keybd_event這個底層機制沒辦法穩定送達所有應用程式，SendInput是
+# 更可靠、更廣泛相容的做法。
+
+_PUL = ctypes.POINTER(ctypes.c_ulong)
+
+
+class _KeyBdInput(ctypes.Structure):
+    _fields_ = [("wVk", ctypes.c_ushort), ("wScan", ctypes.c_ushort),
+                ("dwFlags", ctypes.c_ulong), ("time", ctypes.c_ulong), ("dwExtraInfo", _PUL)]
+
+
+class _InputUnion(ctypes.Union):
+    _fields_ = [("ki", _KeyBdInput)]
+
+
+class _Input(ctypes.Structure):
+    _fields_ = [("type", ctypes.c_ulong), ("ii", _InputUnion)]
+
+
+def _send_input_key(vk: int, key_up: bool = False):
+    extra = ctypes.c_ulong(0)
+    ii = _InputUnion()
+    ii.ki = _KeyBdInput(vk, 0, 0x0002 if key_up else 0, 0, ctypes.pointer(extra))
+    inp = _Input(1, ii)  # type=1 是 INPUT_KEYBOARD
+    ctypes.windll.user32.SendInput(1, ctypes.pointer(inp), ctypes.sizeof(inp))
+
+
 def press_key(key: str) -> str:
-    import win32api
     vks = _parse_key_combo(key)
     if len(vks) != 1:
         raise ValueError("press_key 只能按單一按鍵，組合鍵請用 hotkey")
-    import win32con
-    win32api.keybd_event(vks[0], 0, 0, 0)
-    win32api.keybd_event(vks[0], 0, win32con.KEYEVENTF_KEYUP, 0)
+    _send_input_key(vks[0])
+    _send_input_key(vks[0], key_up=True)
     return f"已按下：{key}"
 
 
 def hotkey(keys: str) -> str:
-    import win32api, win32con
     vks = _parse_key_combo(keys)
     for vk in vks:
-        win32api.keybd_event(vk, 0, 0, 0)
+        _send_input_key(vk)
     for vk in reversed(vks):
-        win32api.keybd_event(vk, 0, win32con.KEYEVENTF_KEYUP, 0)
+        _send_input_key(vk, key_up=True)
     return f"已送出組合鍵：{keys}"
 
 

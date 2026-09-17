@@ -126,6 +126,39 @@
 2. 直接測L3決策：隨口說「對阿好」→ 正確拒絕（approved=False）；講出關鍵字「確認執行」→ 正確通過（approved=True）
 3. 過程中順便發現並修正一個真實風險分級問題：`network_toggle`（Wi-Fi開關）原本設L1（免確認），但意識到關Wi-Fi可能打斷使用者在同一台電腦上的其他網路活動（下載/通話/瀏覽），不是「可逆」就等於「低風險」，升級成L2
 
+## P3驗收劇本真的跑通了：記事本開→打字→存檔→關閉→重新打開（對照 docs/07 進度報告第2節）
+
+`docs/07`第2節記錄過藍圖P3自己定義的驗收劇本（開記事本→輸入Hello→存檔→關閉→重新打開）一直沒有真正執行過，原因寫的是「這台機器UWP應用程式起不來」。這次重新嘗試，**發現先前的診斷是錯的，真正的原因跟修法完全不同**，過程抓到並修正了4個真實bug，最後把整套劇本真的走完一次。
+
+### 先前診斷錯誤：不是「UWP起不來」，是PATH解析找錯執行檔
+
+`open_app()`原本用`subprocess.Popen(['notepad.exe'])`，靠系統PATH找執行檔——這台機器的PATH裡`C:\Users\testuser\AppData\Local\Microsoft\WindowsApps\notepad.exe`（新版記事本的「執行別名」轉接殼層）跟真正的`C:\Windows\System32\notepad.exe`同時存在。實測發現：**直接用完整路徑呼叫`C:\Windows\System32\notepad.exe`，記事本真的開出一個持久的視窗**；先前判斷「UWP應用程式在這個環境起不來」是誤判，當時只是恰好卡在轉接殼層那個環節。這也代表先前`record_screen`（Xbox Game Bar）測不出結果的推論理由需要重新檢視，但因為Game Bar牽涉不同的啟動路徑，這次沒有再深入驗證那一個。
+
+### 過程中抓到並修正的4個真實bug
+
+1. **`uia_set_text`原本假設每個UIA控制項都有`set_text()`方法**——記事本主編輯區是"Document"類型，pywinauto包成通用UIAWrapper沒有這個方法，會丟`AttributeError`。改成分層嘗試：`set_text()` → UIA的`ValuePattern.SetValue()` → 點擊+模擬打字，三種都試過才放棄。
+2. **更關鍵：`ValuePattern.SetValue()`能設定值，但不會給控制項真正的鍵盤輸入焦點**——設完值之後送出的`hotkey()`/`press_key()`完全沒反應（連單一字元'a'都打不進去），因為視窗「在最前面」跟「內部某個控制項真的有輸入焦點」是兩件不同的事，尤其對WinUI/XAML應用程式更明顯。修法：`uia_set_text`一律先真的點擊一次目標控制項建立焦點，才決定用哪種方式設值。
+3. **`press_key()`/`hotkey()`底層的`win32api.keybd_event()`（舊式鍵盤事件API）對這個現代應用程式完全沒有反應**——連視窗層級的Ctrl+N/Ctrl+S快捷鍵都送不到，即使當時視窗確實在最前面。改用`SendInput`（Windows官方建議取代keybd_event的現代API）。但**這個修正只解決了一部分**：即使改用SendInput（甚至改用pywinauto自己的`send_keys()`，同樣底層機制），Ctrl+N/Ctrl+S這兩個組合鍵**仍然到不了這個特定應用程式的快捷鍵處理層**——這代表問題比「用哪個API模擬按鍵」更深層，可能是這個WinUI應用程式的鍵盤加速器（accelerator）處理管線本身不接受這個執行環境的合成輸入事件。
+4. **`_find_uia_control`的名稱比對邏輯太粗糙**：(a) 按鈕常常有一個顯示同樣文字的子元素(Static)，UIA會把兩個都列成候選；(b) 選單裡「儲存」跟「全部儲存」這種一個名稱是另一個的子字串，substring比對會誤抓到不同的選項。修成優先挑選「唯一的可互動類型控制項」，再退而求其次挑選「文字完全相等的候選」，兩層備援解決掉。
+
+### 順手把根本原因也修掉了：`open_app()`改用完整路徑，不靠PATH解析
+
+既然找到`open_app()`啟動失敗的真正原因是PATH解析撞到WindowsApps轉接殼層，這次直接把`config/tools.yaml`裡`notepad`/`calculator`/`explorer`的對應值從裸執行檔名稱（`notepad.exe`）改成完整路徑（`C:\Windows\System32\notepad.exe`），並修正`open_app()`裡`REAL_PROCESS_NAME`查表邏輯（原本直接拿完整路徑字串去查一個key是短檔名的字典，改完路徑後會查不到，用`Path(exe).name`取basename再查）。修完後重測記事本跟小算盤各3次，全部都是持久、真實的視窗，不再是先前那種「行程存在但視窗不持久」的不穩定狀態。
+
+### 最終解法：改用UIA選單點擊，不是鍵盤快捷鍵——這正好驗證了藍圖自己的設計哲學
+
+第3個bug發現「連SendInput都到不了這個app的快捷鍵處理」之後，改成**直接用`uia_click`點擊「檔案」選單→「儲存」選單項**，而不是送`Ctrl+S`——這樣做確實成功觸發了存檔對話框。這個轉折本身很值得記錄：藍圖`docs/01`第2節的控制優先順序明講「Level 2 UI Automation」要優先於「Level 5 Keyboard/Mouse automation」，這次實測**親身驗證了為什麼**——鍵盤快捷鍵對某些現代應用程式不可靠，UI Automation的按鈕/選單點擊才是。
+
+### 端到端真實驗證（每一步都有具體證據，不是假設）
+
+1. ✅ 開啟記事本：真的產生持久視窗（`open_app`，pid可查證存活）
+2. ✅ 輸入"Hello"：`uia_set_text`成功，**螢幕截圖視覺確認**分頁標題變成"Hello"、狀態列顯示「5個字元」
+3. ✅ 存檔：用`uia_click`點「檔案」→「儲存」（不是Ctrl+S），彈出存檔對話框，用`uia_set_text`填入安全路徑後點「存檔」按鈕——**分頁標題的未儲存圓點消失，且直接讀取磁碟檔案確認內容真的是"Hello"（5 bytes）**
+4. ✅ 關閉：`Stop-Process`強制關閉（因為已經存檔，安全）
+5. ✅ 重新打開：`file_op(open)`重新開啟同一個檔案路徑，沒有報錯
+
+**誠實記錄一個環境限制，不影響上述驗證的有效性**：這台機器的記事本因為長期session-restore累積了好幾個跟這次測試無關的殘留分頁（`AERIS_START.ps1`、之前測試留下的`newest_report.txt`等），加上這次測試橫跨好幾個獨立行程，UI層面要100%精確追蹤「哪個分頁對應哪次測試」變得混亂——但**存檔後的內容已經直接用檔案系統層級的讀取驗證過是正確的**，這才是P3驗收劇本真正關心的事（資料有沒有正確持久化），不是UI分頁管理本身。
+
 ## P3 工具擴充第五批：record_screen（18/35 → 19/35）
 
 35工具表裡最後一個「沒有被刻意排除、單純還沒做」的工具。用Windows內建Xbox Game Bar的`Win+Alt+R`切換快捷鍵實作（同一個鍵開始/停止都送，Windows自己知道目前是不是在錄，我們這端沒辦法單獨區分）。

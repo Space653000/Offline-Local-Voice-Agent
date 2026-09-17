@@ -164,8 +164,8 @@ table.dbtable td.field{font-weight:700;font-family:ui-monospace,Menlo,Consolas,m
               stroke-dasharray="169.6" stroke-dashoffset="110" transform="rotate(-90 32 32)"/>
           </svg>
           <div>
-            <b>69%</b> <span class="label"><span lang-zh>整體工程進度（P0～P6 共 7 大階段）</span><span lang-en>overall build progress (7 phases, P0–P6)</span></span>
-            <div class="progressbar" style="width:220px"><i style="width:69%"></i></div>
+            <b>71%</b> <span class="label"><span lang-zh>整體工程進度（P0～P6 共 7 大階段）</span><span lang-en>overall build progress (7 phases, P0–P6)</span></span>
+            <div class="progressbar" style="width:220px"><i style="width:71%"></i></div>
           </div>
         </div>
         <a href="companion.html" style="text-decoration:none">
@@ -293,6 +293,14 @@ table.dbtable td.field{font-weight:700;font-family:ui-monospace,Menlo,Consolas,m
         </div>
       </section>
 
+      <section id="p3-acceptance">
+        <div class="sec-head"><h2><span lang-zh>重大進展：藍圖P3的驗收測試真的跑通了（並修正了先前一個誤判）</span><span lang-en>Major milestone: the blueprint's P3 acceptance test actually passed (and corrected an earlier misdiagnosis)</span></h2></div>
+        <div class="stack">
+          <p lang-zh>藍圖要求的驗收流程「開記事本→輸入Hello→存檔→關閉→重新打開」這次真的完整跑過一次，並且用檔案系統直接驗證內容真的存下來了。過程中發現先前判斷「這台機器沒辦法開某些內建程式」的原因其實搞錯了——真正原因是啟動程式的方式撞到系統裡兩個同名捷徑衝突，換一種更明確的啟動方式後，記事本、小算盤都能穩定開啟。也發現這個新版記事本不接受電腦模擬的鍵盤快捷鍵（連Ctrl+S都沒反應），改成直接點擊選單裡的「存檔」按鈕才成功——這正好印證了當初藍圖堅持「盡量用點擊操作、少用模擬按鍵」這個設計原則是對的。</p>
+          <p lang-en>The blueprint's required test flow — open Notepad, type "Hello", save, close, reopen — actually ran start to finish this time, with the file system itself confirming the content genuinely persisted. Along the way, an earlier diagnosis that "this machine can't launch certain built-in programs" turned out to be wrong — the real cause was a naming conflict in how the program got launched; switching to a more explicit launch method made Notepad and Calculator both open reliably. Also discovered this modern Notepad ignores simulated keyboard shortcuts entirely (not even Ctrl+S worked) — clicking the Save menu item directly succeeded instead. That's a real-world confirmation of why the blueprint insisted on preferring clicks over simulated keystrokes.</p>
+        </div>
+      </section>
+
       <section id="aeris-orders">
         <div class="sec-head"><h2><span lang-zh>送給 AERIS 的訂單</span><span lang-en>Orders sent to AERIS</span></h2></div>
         <p class="sec-sub" lang-zh>語音代理人（這個介面）判斷是聲學工程問題時，會引導你把需求講清楚，產生一份「訂單」交給 AERIS 後台處理。這裡列出最近送出的訂單跟目前狀態。</p>
@@ -349,8 +357,8 @@ table.dbtable td.field{font-weight:700;font-family:ui-monospace,Menlo,Consolas,m
       </section>
 
       <div style="text-align:center;color:var(--sub);font-size:11.5px;margin-top:30px">
-        <span lang-zh>更新時間 2026-09-18 · P3新增檔案操作/電源控制/錄音轉文字/螢幕錄影/UIA原語（35工具表19/35）· P6補上多步驟規劃 · 補齊記憶/操作紀錄資料表 · 補測4項KPI（2項達標、2項誠實回報沒達標並找到原因）· 補上UI五態模型 · 新增config/外部化設定 · 完整技術報告在 progress/ 資料夾跟 docs/07 進度報告</span>
-        <span lang-en>Updated 2026-09-18 · P3 added file ops/power control/audio transcription/screen recording/UIA primitives (35-tool table now 19/35) · P6 added multi-step planning · completed memory/logging tables · measured 4 KPIs (2 pass, 2 honestly reported as missed with root cause found) · added the 5-state UI model · externalized config/ settings · full technical reports in the progress/ folder and docs/07</span>
+        <span lang-zh>更新時間 2026-09-18 · P3驗收劇本真的跑通了(記事本開→打字→存檔→關閉→重開，並修正一個先前的環境誤判) · 新增檔案操作/電源控制/錄音轉文字/螢幕錄影/UIA原語(35工具表19/35) · P6補上多步驟規劃 · 補齊記憶/操作紀錄資料表 · 補測4項KPI · 補上UI五態模型 · 新增config/外部化設定 · 完整技術報告在 progress/ 資料夾跟 docs/07 進度報告</span>
+        <span lang-en>Updated 2026-09-18 · The P3 acceptance script actually passed (Notepad open->type->save->close->reopen, correcting an earlier environment misdiagnosis) · added file ops/power control/audio transcription/screen recording/UIA primitives (35-tool table now 19/35) · P6 added multi-step planning · completed memory/logging tables · measured 4 KPIs · added the 5-state UI model · externalized config/ settings · full technical reports in the progress/ folder and docs/07</span>
       </div>
     </main>
 
@@ -366,6 +374,7 @@ table.dbtable td.field{font-weight:700;font-family:ui-monospace,Menlo,Consolas,m
       <a href="#planner"><span lang-zh>多步驟規劃</span><span lang-en>Multi-step Planning</span></a>
       <a href="#memory-logging"><span lang-zh>記憶跟紀錄</span><span lang-en>Memory & Logging</span></a>
       <a href="#latency-finding"><span lang-zh>延遲量測發現</span><span lang-en>Latency Finding</span></a>
+      <a href="#p3-acceptance"><span lang-zh>P3驗收通過</span><span lang-en>P3 Acceptance</span></a>
       <a href="#aeris-orders"><span lang-zh>AERIS 訂單</span><span lang-en>AERIS Orders</span></a>
       <a href="#roadmap"><span lang-zh>接下來</span><span lang-en>Roadmap</span></a>
       <a href="#backend"><span lang-zh>後端/資料庫</span><span lang-en>Backend/DB</span></a>

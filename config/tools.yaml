@@ -4,13 +4,19 @@
 #
 # 對照 docs/07 進度報告第11節指出的落差：原本寫死在 tools/basic_tools.py 的 Python 字典裡。
 
+# 對照 docs/06「P3驗收劇本真的跑通了」一節抓到的真實bug：原本這裡只寫"notepad.exe"這種
+# 裸執行檔名稱，靠subprocess.Popen()自己的PATH解析找執行檔——這台機器的PATH裡同時有
+# C:\Users\<user>\AppData\Local\Microsoft\WindowsApps\notepad.exe（新版應用程式的「執行
+# 別名」轉接殼層）跟真正的C:\Windows\System32\notepad.exe，裸名稱解析會不穩定甚至啟動失敗
+# （之前一度誤判成「這個環境UWP應用程式起不來」，後來才發現是PATH解析問題，不是相容性問題）。
+# 改成明確寫完整路徑，不靠PATH自己猜，這樣才是真正穩定的修法。
 known_apps:
-  notepad: notepad.exe
-  記事本: notepad.exe
-  calculator: calc.exe
-  小算盤: calc.exe
-  explorer: explorer.exe
-  檔案總管: explorer.exe
+  notepad: C:\Windows\System32\notepad.exe
+  記事本: C:\Windows\System32\notepad.exe
+  calculator: C:\Windows\System32\calc.exe
+  小算盤: C:\Windows\System32\calc.exe
+  explorer: C:\Windows\explorer.exe
+  檔案總管: C:\Windows\explorer.exe
   settings: "ms-settings:"
   設定: "ms-settings:"
 
