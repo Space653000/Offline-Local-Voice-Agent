@@ -126,6 +126,30 @@
 2. 直接測L3決策：隨口說「對阿好」→ 正確拒絕（approved=False）；講出關鍵字「確認執行」→ 正確通過（approved=True）
 3. 過程中順便發現並修正一個真實風險分級問題：`network_toggle`（Wi-Fi開關）原本設L1（免確認），但意識到關Wi-Fi可能打斷使用者在同一台電腦上的其他網路活動（下載/通話/瀏覽），不是「可逆」就等於「低風險」，升級成L2
 
+## 補齊藍圖第7節UIA原語（對照 docs/07 進度報告第4節抓到的最大缺口）
+
+`docs/07_Progress_Report_vs_Blueprint_2026-09-17.md`第4節指出：藍圖docs/01第7節列的19個canonical工具裡，`get_active_window`/`list_windows`/`focus_window`/`uia_click`/`uia_set_text`/`uia_select`/`press_key`/`hotkey`這7個UI Automation原語完全空白，導致P3自己定義的驗收劇本（記事本開→打字→存檔→關閉→重開）從沒真正跑過。這批補上其中8個工具（`tools/basic_tools.py`）：
+
+- `get_active_window()`：查詢目前最前面視窗（win32gui.GetForegroundWindow + GetWindowThreadProcessId）
+- `list_windows()`：列出所有可見視窗跟pid（EnumWindows）
+- `focus_window(pid|title)`：切到指定視窗，標題比對延續close_app_by_pid的安全原則（模糊比對到多個就直接拒絕，不猜）
+- `uia_click(pid, control_name)` / `uia_set_text(pid, control_name, text)` / `uia_select(pid, control_name, item_name)`：用pywinauto的UIA backend連接指定pid的視窗，靠控制項顯示文字定位（同名有多個就拒絕，跟找不到一樣明確報錯），不是滑鼠座標也不是SendKeys盲打
+- `press_key(key)` / `hotkey(keys)`：通用鍵盤原語，`hotkey`維護一個黑名單擋掉`Win+R`（等同繞過Policy Engine執行任意命令）跟`Win+L`（鎖定電腦畫面）
+
+**過程中抓到並修正一個真實的Windows API限制**：`focus_window`第一版直接呼叫`win32gui.SetForegroundWindow(hwnd)`，實測時丟出`pywintypes.error`——這是Windows內建的「焦點竊取保護」，背景行程預設不能搶走最前面視窗的焦點。改用標準合法的繞過技巧：先用`AttachThreadInput`把呼叫端執行緒跟目標視窗的輸入狀態接起來，再呼叫`SetForegroundWindow`，結束後解除綁定；並且改成用`GetForegroundWindow()`的實際結果驗證有沒有真的切換成功，不是呼叫沒丟例外就假設成功。
+
+**端到端真實測試**（都是真的操作真實應用程式，不是模擬）：
+1. `get_active_window`/`list_windows`：多次呼叫結果一致且正確
+2. `focus_window`：先切到PowerShell（驗證成功切過去），再切到小畫家（驗證真的從PowerShell切換過去，不是本來就在前面）——證明修好的AttachThreadInput技巧真的有效
+3. `uia_click`：對小畫家點擊「橡皮擦」按鈕成功；故意點名稱有兩個符合的「橢圓形」正確被拒絕；故意點不存在的按鈕正確報錯
+4. `press_key`/`hotkey`：按Escape、送出Ctrl+Z(復原)都正確執行；故意送`Win+R`跟`Win+L`都被黑名單正確擋下；`press_key`故意傳組合鍵正確被拒絕並導向`hotkey`
+
+**誠實記錄兩個測試過程中的環境限制發現，跟工具本身的bug無關**：
+- 這個工作環境裡，UWP封裝的Windows應用程式（新版記事本、小算盤）用`subprocess.Popen`啟動後，行程會在很短時間內自己結束、從來沒有真的建立過視窗——用經典Win32程式（小畫家/檔案總管）測試完全正常。這代表這個特定環境下無法用記事本/小算盤當UIA測試對象，但不影響工具本身的正確性（在能正常開啟視窗的應用程式上完全正常運作）
+- `uia_set_text`/`uia_select`跟已經驗證過的`uia_click`共用完全一樣的連線／定位邏輯（`_connect_uia_top_window`+`_find_uia_control`），差別只是最後呼叫pywinauto既有的`.set_text()`/`.select()`而不是`.click_input()`——這次沒有找到一個「有真正可編輯欄位、又不會冒然動到專案真實檔案」的安全測試對象（File Explorer裡能找到的Edit控制項都是檔案重新命名欄位，牽涉到真實專案目錄），所以這兩個工具沒有獨立實測到，這是誠實記錄的限制，不是隱瞞
+
+已加進`full_pipeline.py`的LLM工具清單跟`risk_levels.py`的風險分級（get_active_window/list_windows=L0，focus_window/press_key=L1，uia_click/uia_set_text/uia_select/hotkey=L2）。
+
 ## P3 工具擴充第三批（15/35 → 17/35）
 
 新增2個工具真實實作，這次特別挑「docs/01第7節明文列出、但一直沒做」以及「風險等級最高、之前刻意跳過」的：

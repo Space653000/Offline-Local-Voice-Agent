@@ -459,3 +459,214 @@ def power_action(action: str) -> str:
         ctypes.windll.powrprof.SetSuspendState(0, 1, 0)
         return "已進入睡眠模式"
     raise ValueError(f"power_op 不支援的 action：{action}（只接受 shutdown/restart/sleep/cancel）")
+
+
+# ---- UIA 原語：對照 docs/01 藍圖第7節，讓LLM能操作「使用者自己開啟的任意應用程式」，
+# 不再侵限於白名單裡的4個app。這是這次盤點報告(docs/07)抓到的最大缺口——之前完全沒有實作。
+# 安全設計延續 close_app_by_pid 的教訓：只要牽涉「鎖定要操作哪一個視窗」，一律優先要求pid，
+# 不接受單純的標題模糊比對；如果非用標題，一定要求唯一比對到剛好一個結果，模糊就直接拒絕。
+
+def get_active_window() -> dict:
+    import win32gui, win32process
+    hwnd = win32gui.GetForegroundWindow()
+    title = win32gui.GetWindowText(hwnd)
+    _, pid = win32process.GetWindowThreadProcessId(hwnd)
+    return {"title": title, "pid": pid}
+
+
+def list_windows() -> str:
+    import win32gui, win32process
+    results = []
+
+    def _cb(hwnd, _):
+        if win32gui.IsWindowVisible(hwnd) and win32gui.GetWindowText(hwnd):
+            _, pid = win32process.GetWindowThreadProcessId(hwnd)
+            results.append((win32gui.GetWindowText(hwnd), pid))
+        return True
+
+    win32gui.EnumWindows(_cb, None)
+    if not results:
+        return "目前沒有偵測到任何有標題的可見視窗"
+    return "目前開著的視窗：\n" + "\n".join(f"- {t} (pid={p})" for t, p in results)
+
+
+def focus_window(pid: int = None, title: str = None) -> str:
+    import win32gui, win32process, win32con
+    if pid is None and not title:
+        raise ValueError("focus_window 需要 pid 或 title 其中一個")
+
+    matches = []
+
+    def _cb(hwnd, _):
+        if not win32gui.IsWindowVisible(hwnd):
+            return True
+        t = win32gui.GetWindowText(hwnd)
+        if not t:
+            return True
+        _, p = win32process.GetWindowThreadProcessId(hwnd)
+        if pid is not None:
+            if p == pid:
+                matches.append((hwnd, t))
+        elif title.lower() in t.lower():
+            matches.append((hwnd, t))
+        return True
+
+    win32gui.EnumWindows(_cb, None)
+    if not matches:
+        raise ValueError(f"找不到符合的視窗（pid={pid}, title={title}）")
+    if len(matches) > 1:
+        names = "、".join(t for _, t in matches)
+        raise ValueError(f"符合條件的視窗有 {len(matches)} 個（{names}），無法判斷要切到哪一個，請用 pid 精確指定")
+
+    hwnd, window_title = matches[0]
+    if win32gui.IsIconic(hwnd):
+        win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
+    _force_set_foreground(hwnd)
+
+    if win32gui.GetForegroundWindow() != hwnd:
+        raise RuntimeError(f"已嘗試切換到「{window_title}」，但Windows拒絕把它設為最前面視窗（焦點竊取保護），實際上沒有真的切過去")
+    return f"已切換到視窗：{window_title}"
+
+
+def _force_set_foreground(hwnd) -> None:
+    """
+    Windows 預設會擋掉「背景行程搶走最前面視窗焦點」（SetForegroundWindow直接呼叫在這種情況下
+    會丟出 pywintypes.error，這是實測抓到的真實限制，不是猜的）。標準合法的繞過方式是先用
+    AttachThreadInput 把呼叫端執行緒跟目標視窗的輸入狀態接起來，讓Windows把呼叫端也當作
+    「使用者正在操作的那個」，SetForegroundWindow才會成功，結束後要記得解除綁定。
+    """
+    import win32gui, win32process, win32api
+    import ctypes
+    user32 = ctypes.windll.user32
+
+    current_thread = win32api.GetCurrentThreadId()
+    target_thread, _ = win32process.GetWindowThreadProcessId(hwnd)
+    fg_hwnd = win32gui.GetForegroundWindow()
+    fg_thread, _ = win32process.GetWindowThreadProcessId(fg_hwnd) if fg_hwnd else (0, 0)
+
+    attached_fg = fg_thread and fg_thread != current_thread and user32.AttachThreadInput(current_thread, fg_thread, True)
+    attached_target = target_thread and target_thread != current_thread and user32.AttachThreadInput(current_thread, target_thread, True)
+    try:
+        try:
+            win32gui.SetForegroundWindow(hwnd)
+        except Exception:
+            pass  # 就算這裡還是失敗，外層會用 GetForegroundWindow() 的實際結果來判斷成功與否
+    finally:
+        if attached_fg:
+            user32.AttachThreadInput(current_thread, fg_thread, False)
+        if attached_target:
+            user32.AttachThreadInput(current_thread, target_thread, False)
+
+
+def _connect_uia_top_window(pid: int):
+    """
+    只能透過pid連接（不接受標題模糊比對）——跟 close_app_by_pid 的安全原則一致：
+    呼叫方一定是傳 open_app 或 get_active_window/list_windows 取得的真實pid，
+    不是靠標題字串在整台電腦裡亂猜要操作哪一個視窗。
+    """
+    from pywinauto import Application
+    try:
+        app = Application(backend="uia").connect(process=pid)
+    except Exception as e:
+        raise ValueError(f"無法連接到 pid={pid} 的視窗（可能已經關閉或不是這個pid）：{e}")
+    return app.top_window()
+
+
+def _find_uia_control(top_window, name: str):
+    all_ctrls = top_window.descendants()
+    candidates = [c for c in all_ctrls if name in (c.window_text() or "")]
+    if not candidates:
+        raise ValueError(f"在這個視窗裡找不到名稱包含「{name}」的控制項")
+    if len(candidates) > 1:
+        raise ValueError(f"名稱包含「{name}」的控制項有 {len(candidates)} 個，無法判斷要操作哪一個，請給更精確的名稱")
+    return candidates[0]
+
+
+def uia_click(pid: int, control_name: str) -> str:
+    top = _connect_uia_top_window(pid)
+    ctrl = _find_uia_control(top, control_name)
+    ctrl.click_input()
+    return f"已點擊控制項：{control_name}"
+
+
+def uia_set_text(pid: int, control_name: str, text: str) -> str:
+    """
+    跟 text_input_op 的差別：這裡是真的用UIA找到指定的輸入欄位再設值，不是SendKeys盲打到
+    目前作用中欄位——如果游標不在正確位置，SendKeys會打錯地方，這個工具不會有這個問題。
+    """
+    top = _connect_uia_top_window(pid)
+    ctrl = _find_uia_control(top, control_name)
+    ctrl.set_text(text)
+    return f"已將「{control_name}」的內容設定為：{text[:30]}{'...' if len(text) > 30 else ''}"
+
+
+def uia_select(pid: int, control_name: str, item_name: str) -> str:
+    top = _connect_uia_top_window(pid)
+    ctrl = _find_uia_control(top, control_name)
+    ctrl.select(item_name)
+    return f"已在「{control_name}」選擇：{item_name}"
+
+
+# ---- press_key / hotkey：通用鍵盤原語，藍圖第7節列出的最底層building block ----
+# 安全設計：維護一個明確的黑名單，擋掉「等同繞過Policy Engine執行任意命令」或
+# 「過度干擾且不可逆」的組合鍵（例如 Win+R 開執行對話框、Win+L 鎖定電腦），
+# 其餘一般按鍵（存檔/復原/切換視窗等）才放行——這是唯一需要特別把關的鍵盤操作，
+# 因為藍圖P3自己定義的驗收劇本（記事本存檔）就是靠 Ctrl+S 這個組合鍵完成的。
+
+_BLOCKED_HOTKEYS = {
+    frozenset({"win", "r"}): "會開啟「執行」對話框，等同繞過Policy Engine執行任意命令，安全設計禁止",
+    frozenset({"win", "l"}): "會鎖定電腦畫面，過度干擾且需要密碼才能解鎖，不允許",
+}
+
+
+def _vk_map():
+    import win32con
+    m = {
+        "enter": win32con.VK_RETURN, "esc": win32con.VK_ESCAPE, "escape": win32con.VK_ESCAPE,
+        "tab": win32con.VK_TAB, "space": win32con.VK_SPACE, "backspace": win32con.VK_BACK,
+        "delete": win32con.VK_DELETE, "up": win32con.VK_UP, "down": win32con.VK_DOWN,
+        "left": win32con.VK_LEFT, "right": win32con.VK_RIGHT, "home": win32con.VK_HOME, "end": win32con.VK_END,
+        "ctrl": win32con.VK_CONTROL, "alt": win32con.VK_MENU, "shift": win32con.VK_SHIFT, "win": win32con.VK_LWIN,
+    }
+    for i in range(1, 13):
+        m[f"f{i}"] = getattr(win32con, f"VK_F{i}")
+    for c in "abcdefghijklmnopqrstuvwxyz0123456789":
+        m[c] = ord(c.upper())
+    return m
+
+
+def _parse_key_combo(keys: str):
+    parts = [p.strip().lower() for p in keys.replace("+", " ").split() if p.strip()]
+    if not parts:
+        raise ValueError("沒有指定要按的按鍵")
+    combo = frozenset(parts)
+    if combo in _BLOCKED_HOTKEYS:
+        raise ValueError(f"不允許送出這個組合鍵（{keys}）：{_BLOCKED_HOTKEYS[combo]}")
+    vk_map = _vk_map()
+    vks = []
+    for p in parts:
+        if p not in vk_map:
+            raise ValueError(f"不認識的按鍵：{p}")
+        vks.append(vk_map[p])
+    return vks
+
+
+def press_key(key: str) -> str:
+    import win32api
+    vks = _parse_key_combo(key)
+    if len(vks) != 1:
+        raise ValueError("press_key 只能按單一按鍵，組合鍵請用 hotkey")
+    import win32con
+    win32api.keybd_event(vks[0], 0, 0, 0)
+    win32api.keybd_event(vks[0], 0, win32con.KEYEVENTF_KEYUP, 0)
+    return f"已按下：{key}"
+
+
+def hotkey(keys: str) -> str:
+    import win32api, win32con
+    vks = _parse_key_combo(keys)
+    for vk in vks:
+        win32api.keybd_event(vk, 0, 0, 0)
+    for vk in reversed(vks):
+        win32api.keybd_event(vk, 0, win32con.KEYEVENTF_KEYUP, 0)
+    return f"已送出組合鍵：{keys}"

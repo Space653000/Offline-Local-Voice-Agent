@@ -164,8 +164,8 @@ table.dbtable td.field{font-weight:700;font-family:ui-monospace,Menlo,Consolas,m
               stroke-dasharray="169.6" stroke-dashoffset="110" transform="rotate(-90 32 32)"/>
           </svg>
           <div>
-            <b>59%</b> <span class="label"><span lang-zh>整體工程進度（P0～P6 共 7 大階段）</span><span lang-en>overall build progress (7 phases, P0–P6)</span></span>
-            <div class="progressbar" style="width:220px"><i style="width:59%"></i></div>
+            <b>60%</b> <span class="label"><span lang-zh>整體工程進度（P0～P6 共 7 大階段）</span><span lang-en>overall build progress (7 phases, P0–P6)</span></span>
+            <div class="progressbar" style="width:220px"><i style="width:60%"></i></div>
           </div>
         </div>
         <a href="companion.html" style="text-decoration:none">
@@ -182,7 +182,7 @@ table.dbtable td.field{font-weight:700;font-family:ui-monospace,Menlo,Consolas,m
           <div class="card"><div class="card-top"><b>P0 <span lang-zh>硬體驗證</span><span lang-en>Hardware</span></b><span class="pill pass">PASS</span></div><div class="note" lang-zh>ASR+LLM 都成功跑在 GPU 上</div><div class="note" lang-en>ASR + LLM both confirmed running on GPU</div></div>
           <div class="card"><div class="card-top"><b>P1 <span lang-zh>語音輸入</span><span lang-en>Speech Input</span></b><span class="pill pass">PASS</span></div><div class="note" lang-zh>VAD、喚醒詞、中文 ASR 全部驗證</div><div class="note" lang-en>VAD, wake word, Chinese ASR all verified</div></div>
           <div class="card"><div class="card-top"><b>P2 <span lang-zh>意圖辨識</span><span lang-en>Intent Recognition</span></b><span class="pill pass">PASS</span></div><div class="note" lang-zh>工具選擇準確率 97.1%</div><div class="note" lang-en>Tool-selection accuracy 97.1%</div></div>
-          <div class="card"><div class="card-top"><b>P3 <span lang-zh>電腦控制</span><span lang-en>Automation</span></b><span class="pill warn"><span lang-zh>17/35 工具</span><span lang-en>17/35 tools</span></span></div><div class="note" lang-zh>新增檔案操作（找/開/搬/複製/改名/建資料夾/刪除，限使用者家目錄）跟電源控制（關機/重開/睡眠，需複誦確認），其餘工具陸續補</div><div class="note" lang-en>Added file operations (find/open/move/copy/rename/create-folder/delete, sandboxed to your home folder) and power control (shutdown/restart/sleep, requires a spoken keyword); remaining tools being added</div></div>
+          <div class="card"><div class="card-top"><b>P3 <span lang-zh>電腦控制</span><span lang-en>Automation</span></b><span class="pill warn"><span lang-zh>17/35 工具 + UIA原語</span><span lang-en>17/35 tools + UIA primitives</span></span></div><div class="note" lang-zh>新增檔案操作/電源控制，並補上藍圖第7節的UI Automation原語（切換視窗/點擊/按鍵盤），能操作使用者自己開啟的任意應用程式了，不再侵限於白名單app</div><div class="note" lang-en>Added file/power ops, plus the blueprint's UI Automation primitives (focus window, click, keyboard) — can now operate any window the user has open, not just whitelisted apps</div></div>
           <div class="card"><div class="card-top"><b>P4 <span lang-zh>安全把關</span><span lang-en>Safety</span></b><span class="pill warn"><span lang-zh>核心機制已通</span><span lang-en>Core loop working</span></span></div><div class="note" lang-zh>L2/L3敏感操作用語音確認已驗證；緊急停止熱鍵（Ctrl+Shift+F12）跟語音停止指令（「停止」「取消」）都已實作並真實測過</div><div class="note" lang-en>Voice confirmation for sensitive/dangerous actions verified; Emergency Stop hotkey (Ctrl+Shift+F12) and spoken stop commands ("stop"/"cancel") both implemented and tested end-to-end</div></div>
           <div class="card"><div class="card-top"><b>P5 <span lang-zh>畫面輔助</span><span lang-en>Vision</span></b><span class="pill idle"><span lang-zh>未開始</span><span lang-en>Not started</span></span></div></div>
         </div>
@@ -261,6 +261,14 @@ table.dbtable td.field{font-weight:700;font-family:ui-monospace,Menlo,Consolas,m
         </div>
       </section>
 
+      <section id="uia-primitives">
+        <div class="sec-head"><h2><span lang-zh>補上UI Automation原語：能操作任意應用程式了</span><span lang-en>UI Automation primitives added: can now operate any application</span></h2></div>
+        <div class="stack">
+          <p lang-zh>做了一份逐節對照藍圖的詳細進度報告後發現：藍圖明文要求的「切換視窗/點擊按鈕/操作輸入欄位/按組合鍵」這幾個基本操作能力完全沒做，導致AI一直只能操作4個白名單裡的App，碰不到使用者自己開的其他視窗。現在補上了：可以查詢/切換到任意視窗、點擊視窗裡的按鈕（用畫面上的文字定位，不是憑座標亂點）、送出鍵盤按鍵跟組合鍵（例如存檔用的Ctrl+S）。過程中也抓到一個Windows本身的安全限制（背景程式不能隨便搶走視窗焦點）並修好了。</p>
+          <p lang-en>A detailed section-by-section audit against the blueprint found that basic operations it explicitly requires — switching windows, clicking buttons, filling in fields, sending key combos — were completely missing, which meant the AI could only operate 4 whitelisted apps and couldn't touch anything else the user had open. Now added: querying/switching to any window, clicking buttons located by their actual on-screen text (not blind coordinates), and sending keystrokes/combos (like Ctrl+S to save). Along the way, hit and fixed a genuine Windows security restriction that blocks background processes from stealing window focus.</p>
+        </div>
+      </section>
+
       <section id="aeris-orders">
         <div class="sec-head"><h2><span lang-zh>送給 AERIS 的訂單</span><span lang-en>Orders sent to AERIS</span></h2></div>
         <p class="sec-sub" lang-zh>語音代理人（這個介面）判斷是聲學工程問題時，會引導你把需求講清楚，產生一份「訂單」交給 AERIS 後台處理。這裡列出最近送出的訂單跟目前狀態。</p>
@@ -317,8 +325,8 @@ table.dbtable td.field{font-weight:700;font-family:ui-monospace,Menlo,Consolas,m
       </section>
 
       <div style="text-align:center;color:var(--sub);font-size:11.5px;margin-top:30px">
-        <span lang-zh>更新時間 2026-09-17 · P3新增檔案操作/電源控制 · 完整技術報告在 progress/ 資料夾</span>
-        <span lang-en>Updated 2026-09-17 · P3 added file ops/power control · full technical reports in the progress/ folder</span>
+        <span lang-zh>更新時間 2026-09-17 · P3新增檔案操作/電源控制/UIA原語 · 完整技術報告在 progress/ 資料夾跟 docs/07 進度報告</span>
+        <span lang-en>Updated 2026-09-17 · P3 added file ops/power control/UIA primitives · full technical reports in the progress/ folder and docs/07</span>
       </div>
     </main>
 
@@ -330,6 +338,7 @@ table.dbtable td.field{font-weight:700;font-family:ui-monospace,Menlo,Consolas,m
       <a href="#p2">P2 <span lang-zh>意圖辨識</span><span lang-en>Intent</span><span class="pill pass chip">PASS</span></a>
       <a href="#milestone"><span lang-zh>最新里程碑</span><span lang-en>Latest Milestone</span></a>
       <a href="#blueprint-audit"><span lang-zh>藍圖盤點</span><span lang-en>Blueprint Audit</span></a>
+      <a href="#uia-primitives"><span lang-zh>UIA原語</span><span lang-en>UIA Primitives</span></a>
       <a href="#aeris-orders"><span lang-zh>AERIS 訂單</span><span lang-en>AERIS Orders</span></a>
       <a href="#roadmap"><span lang-zh>接下來</span><span lang-en>Roadmap</span></a>
       <a href="#backend"><span lang-zh>後端/資料庫</span><span lang-en>Backend/DB</span></a>

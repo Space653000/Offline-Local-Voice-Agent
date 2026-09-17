@@ -48,6 +48,14 @@ TOOL_IMPLEMENTATIONS = {
     "text_input_op": lambda args: basic_tools.type_text(_require(args, "text", "text_input_op")),
     "file_op": lambda args: basic_tools.file_op(_require(args, "action", "file_op"), **{k: v for k, v in args.items() if k != "action"}),
     "power_op": lambda args: basic_tools.power_action(_require(args, "action", "power_op")),
+    "get_active_window": lambda args: basic_tools.get_active_window(),
+    "list_windows": lambda args: basic_tools.list_windows(),
+    "focus_window": lambda args: basic_tools.focus_window(pid=args.get("pid"), title=args.get("title")),
+    "uia_click": lambda args: basic_tools.uia_click(_require(args, "pid", "uia_click"), _require(args, "control_name", "uia_click")),
+    "uia_set_text": lambda args: basic_tools.uia_set_text(_require(args, "pid", "uia_set_text"), _require(args, "control_name", "uia_set_text"), _require(args, "text", "uia_set_text")),
+    "uia_select": lambda args: basic_tools.uia_select(_require(args, "pid", "uia_select"), _require(args, "control_name", "uia_select"), _require(args, "item_name", "uia_select")),
+    "press_key": lambda args: basic_tools.press_key(_require(args, "key", "press_key")),
+    "hotkey": lambda args: basic_tools.hotkey(_require(args, "keys", "hotkey")),
 }
 
 

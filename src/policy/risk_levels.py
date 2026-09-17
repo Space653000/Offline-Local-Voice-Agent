@@ -54,6 +54,16 @@ TOOL_RISK_TABLE = {
     "dev_tool_op": RiskLevel.L2_SENSITIVE,    # 執行程式碼本身有風險
     "git_op": RiskLevel.L2_SENSITIVE,         # push/merge 可能造成程式碼遺失
     "summarize_doc": RiskLevel.L0_READONLY,
+
+    # 對照 docs/01 藍圖第7節的 UIA 原語（docs/07 進度報告抓到的缺口，這批補上）
+    "get_active_window": RiskLevel.L0_READONLY,
+    "list_windows": RiskLevel.L0_READONLY,
+    "focus_window": RiskLevel.L1_ROUTINE,
+    "uia_click": RiskLevel.L2_SENSITIVE,      # 點到什麼按鈕效果不可預期，比照file_op的謹慎程度
+    "uia_set_text": RiskLevel.L2_SENSITIVE,
+    "uia_select": RiskLevel.L2_SENSITIVE,
+    "press_key": RiskLevel.L1_ROUTINE,        # 多是導覽用的單鍵（Enter/Esc/方向鍵），風險低
+    "hotkey": RiskLevel.L2_SENSITIVE,         # 組合鍵威力較大（例如Alt+F4關視窗），黑名單擋掉最危險的幾個
 }
 
 # 特定工具 + 特定參數組合可以再往上升級（例如 file_op 若 action=delete 就算 L3）

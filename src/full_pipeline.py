@@ -37,6 +37,18 @@ IMPLEMENTED_TOOLS_SPEC = """
   （move/copy/rename/create_folder/delete 只能操作使用者家目錄底下的路徑，不接受系統目錄）
 - power_op：電腦整體電源狀態。args: {"action": "shutdown"|"restart"|"sleep"|"cancel"}
   （shutdown/restart 會先排程30秒延遲執行，cancel 可以在30秒內中止排程）
+- get_active_window：查詢目前作用中(最前面)的視窗。args: {}
+- list_windows：列出目前所有開著的視窗跟它們的pid。args: {}
+- focus_window：切換到指定視窗。args: {"pid": 數字} 或 {"title": "視窗標題關鍵字"}
+- uia_click：點擊某個視窗裡的按鈕/控制項（用視窗內容真正的文字定位，不是滑鼠座標）。
+  args: {"pid": 數字, "control_name": "要點的按鈕/控制項上顯示的文字"}
+- uia_set_text：把文字設定到某個視窗裡指定的輸入欄位（不是打到目前游標位置，是精確指定欄位）。
+  args: {"pid": 數字, "control_name": "欄位名稱或標籤文字", "text": "要填入的內容"}
+- uia_select：在某個視窗的清單/下拉選單裡選擇一個項目。
+  args: {"pid": 數字, "control_name": "清單/下拉選單的名稱", "item_name": "要選的項目文字"}
+- press_key：按一個單獨的鍵（例如Enter、Escape、Tab、方向鍵、F1-F12）。args: {"key": "enter"}
+- hotkey：按一個組合鍵（例如存檔Ctrl+S、復原Ctrl+Z）。args: {"keys": "ctrl+s"}
+  （不接受 Win+R、Win+L 這類會繞過安全機制或過度干擾的組合鍵）
 """
 
 SCHEMA = {
@@ -46,7 +58,10 @@ SCHEMA = {
                                               "take_screenshot", "set_volume", "clipboard_op",
                                               "window_op", "media_control", "network_toggle",
                                               "calculator", "text_to_speech_op", "translate",
-                                              "summarize_doc", "text_input_op", "file_op", "power_op"]},
+                                              "summarize_doc", "text_input_op", "file_op", "power_op",
+                                              "get_active_window", "list_windows", "focus_window",
+                                              "uia_click", "uia_set_text", "uia_select",
+                                              "press_key", "hotkey"]},
         "args": {"type": "object"},
     },
     "required": ["tool", "args"],
