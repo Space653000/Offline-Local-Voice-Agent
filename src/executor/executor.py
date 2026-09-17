@@ -69,37 +69,73 @@ class Executor:
     def __init__(self):
         self.policy = PolicyEngine()
 
-    def run(self, tool: str, args: dict, user_confirmed: bool = None):
+    def run(self, tool: str, args: dict, user_confirmed: bool = None, session_id: str = None, intent: str = None):
         """
         user_confirmed:
           None  -> 呼叫方還沒問過使用者（第一次呼叫）
           True  -> 使用者已經按了同意
           False -> 使用者拒絕，不執行
+
+        session_id/intent：對照 docs/07 進度報告第8節抓到的Logging缺口——
+        原本 conversation_log 跟 action_audit 兩張表沒有共同ID串連，也沒有紀錄
+        「這個動作是為了達成使用者哪句話」，這裡補上讓兩張表能join、也知道intent。
         """
+        import time
         decision = self.policy.evaluate(tool, args)
 
         if decision.requires_confirmation and user_confirmed is None:
             audit_db.log_action(tool, args, decision.level, True, None, executed=False,
-                                 result_summary="等待使用者確認")
+                                 result_summary="等待使用者確認", session_id=session_id, intent=intent)
             raise ConfirmationRequired(decision)
 
         if decision.requires_confirmation and user_confirmed is False:
             audit_db.log_action(tool, args, decision.level, True, False, executed=False,
-                                 result_summary="使用者拒絕")
+                                 result_summary="使用者拒絕", error="使用者拒絕執行",
+                                 session_id=session_id, intent=intent)
             return {"executed": False, "reason": "使用者拒絕執行"}
 
         impl = TOOL_IMPLEMENTATIONS.get(tool)
         if impl is None:
             audit_db.log_action(tool, args, decision.level, decision.requires_confirmation, user_confirmed,
-                                 executed=False, result_summary="尚未實作這個工具")
+                                 executed=False, result_summary="尚未實作這個工具", error="工具尚未實作",
+                                 session_id=session_id, intent=intent)
             return {"executed": False, "reason": f"工具 '{tool}' 尚未實作（只是意圖判斷，還沒接真正動作）"}
 
+        t0 = time.time()
         try:
             result = impl(args)
+            duration_ms = (time.time() - t0) * 1000
             audit_db.log_action(tool, args, decision.level, decision.requires_confirmation, user_confirmed,
-                                 executed=True, result_summary=str(result))
+                                 executed=True, result_summary=str(result), duration_ms=duration_ms,
+                                 session_id=session_id, intent=intent)
+            if tool == "open_app" and isinstance(result, dict) and "pid" in result:
+                audit_db.record_known_app(args.get("app_name", ""))
+            if tool == "file_op":
+                self._record_touched_folders(args)
             return {"executed": True, "result": result}
         except Exception as e:
+            duration_ms = (time.time() - t0) * 1000
             audit_db.log_action(tool, args, decision.level, decision.requires_confirmation, user_confirmed,
-                                 executed=False, result_summary=f"執行失敗: {e}")
+                                 executed=False, result_summary=f"執行失敗: {e}", error=str(e),
+                                 duration_ms=duration_ms, session_id=session_id, intent=intent)
             return {"executed": False, "reason": str(e)}
+
+    @staticmethod
+    def _record_touched_folders(args: dict):
+        """把file_op真的動到的資料夾記進known_folders（對照藍圖第13節Memory的Known Folders）。
+        create_folder的path本身就是資料夾，其餘(open/rename/delete/move/copy的src/dst)
+        則取檔案路徑的上層目錄——這幾個都是「檔案」路徑，不是資料夾路徑本身。"""
+        paths = []
+        if args.get("action") == "create_folder" and args.get("path"):
+            paths.append(args["path"])
+        else:
+            for key in ("path", "src", "dst", "search_dir"):
+                if args.get(key):
+                    paths.append(args[key])
+        for p in paths:
+            try:
+                resolved = basic_tools._resolve_under_home(p)
+                folder = resolved if resolved.is_dir() else resolved.parent
+                audit_db.record_known_folder(str(folder))
+            except Exception:
+                pass  # 記錄「用過哪些資料夾」是輔助資訊，這裡失敗不該影響工具本身已經執行成功的結果

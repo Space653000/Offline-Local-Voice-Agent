@@ -166,9 +166,10 @@ class PlanRunner:
 
     MAX_STEPS = 5  # 安全上限，防止LLM判斷一直卡在needs_followup=true造成無限迴圈
 
-    def __init__(self, instruction: str, executor: Executor):
+    def __init__(self, instruction: str, executor: Executor, session_id: str = None):
         self.instruction = instruction
         self.ex = executor
+        self.session_id = session_id
         self.history = []
         self.pending_call = None
         self.pending_decision = None
@@ -180,18 +181,25 @@ class PlanRunner:
         return self._continue_loop()
 
     def resume(self, approved: bool, typed_keyword: str = None) -> dict:
-        """L2/L3確認之後繼續跑：把這一步的結果記進history，再回到迴圈問下一步。"""
+        """
+        L2/L3確認之後繼續跑：把這一步的結果記進history，再回到迴圈問下一步。
+
+        typed_keyword=None代表呼叫方（例如語音路徑的_voice_confirm）已經自己驗證過L3關鍵字，
+        這裡不用再檢查一次；只有真的傳了typed_keyword（文字/網頁路徑，使用者打的原始文字，
+        還沒驗證過）才需要在這裡做「一定要打出確認執行」的檢查。不這樣分兩種情況會導致語音
+        路徑已經驗證過的True，在這裡被錯誤地又檢查一次typed_keyword=None，永遠變成False。
+        """
         tool, args = self.pending_call["tool"], self.pending_call["args"]
-        if self.pending_decision.requires_typed_confirmation:
-            approved = approved and (typed_keyword or "").replace(" ", "") == "確認執行"
-        result = self.ex.run(tool, args, user_confirmed=approved)
+        if self.pending_decision.requires_typed_confirmation and typed_keyword is not None:
+            approved = approved and typed_keyword.replace(" ", "") == "確認執行"
+        result = self.ex.run(tool, args, user_confirmed=approved, session_id=self.session_id, intent=self.instruction)
         self.history.append({"tool": tool, "args": args, "result": result})
         self.pending_call, self.pending_decision = None, None
         return self._continue_loop()
 
     def _execute_and_continue(self, tool: str, args: dict, needs_followup: bool) -> dict:
         try:
-            result = self.ex.run(tool, args)
+            result = self.ex.run(tool, args, session_id=self.session_id, intent=self.instruction)
         except ConfirmationRequired as e:
             self.pending_call = {"tool": tool, "args": args}
             self.pending_decision = e.decision
@@ -222,7 +230,7 @@ class PlanRunner:
                     return {"status": "plan_done", "summary": summary, "history": self.history}
                 return {"status": "plan_incomplete", "reason": "規劃者沒有標記完成，也沒有給下一步的工具，先停下來", "history": self.history}
             try:
-                result = self.ex.run(decision["tool"], decision.get("args", {}))
+                result = self.ex.run(decision["tool"], decision.get("args", {}), session_id=self.session_id, intent=self.instruction)
             except ConfirmationRequired as e:
                 self.pending_call = {"tool": decision["tool"], "args": decision.get("args", {})}
                 self.pending_decision = e.decision

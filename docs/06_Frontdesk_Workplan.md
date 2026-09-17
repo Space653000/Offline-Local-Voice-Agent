@@ -126,6 +126,18 @@
 2. 直接測L3決策：隨口說「對阿好」→ 正確拒絕（approved=False）；講出關鍵字「確認執行」→ 正確通過（approved=True）
 3. 過程中順便發現並修正一個真實風險分級問題：`network_toggle`（Wi-Fi開關）原本設L1（免確認），但意識到關Wi-Fi可能打斷使用者在同一台電腦上的其他網路活動（下載/通話/瀏覽），不是「可逆」就等於「低風險」，升級成L2
 
+## 補齊 Memory（第13節）跟 Logging（第14節）的資料表缺口（對照 docs/07 進度報告第7、8節）
+
+`docs/07`第7、8節指出：藍圖第13節要求的5類記憶（Session Context/User Preferences/Known Apps/Known Folders/Command History）只有Command History勉強算做了一半，其餘4類完全空白；第14節要求的10個Logging欄位（Timestamp/Voice transcription/Intent/Plan/Tool/Arguments/Permission level/Execution result/Duration/Error）裡，Duration/Error/Intent三個完全沒有，`conversation_log`跟`action_audit`兩表也沒有共同ID可以join。這次補上：
+
+- **`executor/audit_db.py`重寫**：`action_audit`新增`session_id`/`intent`/`duration_ms`/`error`四個欄位，`conversation_log`新增`session_id`；新增`known_apps`/`known_folders`/`session_context`/`user_preferences`四張表對應藍圖第13節缺的4類記憶。既有資料庫檔案（實測前已經有91筆`action_audit`紀錄）用`ALTER TABLE ADD COLUMN`安全遷移，不會弄丟舊資料——舊資料的新欄位會是NULL，這是正常的，不是bug。
+- **抓到並修正一個真實bug**：`log_conversation()`這個函式一直都存在，但實測查資料庫發現`conversation_log`表**0筆資料**——搜尋整個程式碼庫確認`log_conversation()`從來沒有任何地方真的呼叫過，藍圖要求的「對話紀錄」這個記憶類別形同沒做，只是表存在、沒人寫。這次把它接到`listen_loop.py`（語音路徑，utterance處理完/Front Desk分流時）跟`command_processor.py`（文字路徑，包含確認流程的每一輪）。
+- **`Executor.run()`**：改成用`time.time()`量測真正的執行耗時存進`duration_ms`；失敗時把錯誤訊息額外存一份到獨立的`error`欄位（原本只有混在`result_summary`文字裡）；成功呼叫`open_app`/`file_op`後，分別記進`known_apps`/`known_folders`（跟`basic_tools.py`的白名單`KNOWN_APPS`是兩件事——白名單是安全邊界不會被這張表放寬，這張表純粹是「用過的紀錄」）。
+- **`PlanRunner`/`command_processor.py`/`listen_loop.py`**：都改成把`session_id`傳進`Executor.run()`，讓同一次對話的所有`action_audit`紀錄可以用`session_id`跟`conversation_log`的對應紀錄join在一起查——這是第8節指出的「兩表沒有共同ID」缺口的直接解法。
+- **過程中抓到並修正一個真實bug**：`PlanRunner.resume()`原本不管`typed_keyword`有沒有傳，只要L3就一定拿它跟「確認執行」比對——但語音路徑的`_voice_confirm()`早就自己驗證過關鍵字了，回傳的是已經驗證過的`True`，這裡又拿`None`（語音路徑沒有另外傳`typed_keyword`）去比對，會把正確的語音同意錯誤地打回`False`。修法：只有真的傳了`typed_keyword`（文字/網頁路徑，使用者打的原始文字，還沒驗證過）才在這裡驗證；語音路徑已經驗證過的結果直接信任。用真的語音走一次L3流程測過，修正後行為正確。
+- **端到端真實測試**：文字指令(`run_desktop_command`)+確認流程(`confirm_desktop_command`)各跑過幾次，查資料庫確認`known_apps`（開過calculator/notepad）、`session_context`（正確存最後一個工具跟指令）、`action_audit`新欄位（session_id/intent/duration_ms/error都正確填值，舊資料正確維持NULL不受影響）、`conversation_log`（不再是空表，語音跟文字兩種路徑都有真實紀錄）都正確運作；也重跑了`test_listen_loop_simulated.py`/`test_l3_confirmation.py`/`test_voice_confirmation.py`三個既有回歸測試，全部正常通過，確認這次的改動沒有破壞既有功能。
+- **誠實記錄還沒做的**：`user_preferences`表已經建好、有`get_preference`/`set_preference`函式，但目前沒有任何功能真的去讀寫它（沒有語音指令或UI能讓使用者設定偏好）——這是基礎建設先準備好，不是假裝已經有這個功能在用。
+
 ## 補上最小可行的多步驟規劃能力（對照 docs/07 進度報告第2節P6的缺口）
 
 `docs/07`第2節指出：原本一句話只能對應一個工具呼叫，藍圖P6要求的「找到Downloads裡最新的PDF，打開它，然後把檔名告訴我」這種需要依賴前一步真實結果才能決定下一步參數的複合指令完全做不到。這次在`full_pipeline.py`加了`PlanRunner`：

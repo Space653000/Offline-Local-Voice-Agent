@@ -151,11 +151,15 @@ class ListenLoop:
         偵測到聲學工程問題時會真的啟動 Front Desk 語音多輪引導（例如接麥克風的 run_live）；
         沒給的話（例如單元測試用固定的模擬音訊）就只記錄文字，不會嘗試繼續拉取更多音訊。"""
         from openwakeword.model import Model
+        import uuid
         self.wake_model = Model(wakeword_models=[str(WAKEWORD_ONNX)], inference_framework="onnx")
         self.wake_model_name = list(self.wake_model.models.keys())[0]
         self.vad = VADStreamer(VAD_ONNX)
         self.on_event = on_event  # callback，方便測試時攔截事件而不是直接print
         self.chunk_source = chunk_source
+        # 對照 docs/07 進度報告第8節Logging缺口：每次啟動常駐監聽都給一個獨立session_id，
+        # 讓這次執行期間的conversation_log/action_audit能用同一個ID串起來查。
+        self.session_id = "voice-" + uuid.uuid4().hex[:12]
         self.reset_to_idle()
 
     def reset_to_idle(self):
@@ -269,27 +273,34 @@ class ListenLoop:
             return
 
         from mode_classifier import classify
+        from executor import audit_db
         mode = classify(text)
         self.on_event({"type": "mode", "mode": mode})
 
         if mode["mode"] == "desktop_control":
-            from full_pipeline import understand
-            from executor.executor import Executor, ConfirmationRequired
-            from executor import audit_db
-            from policy.risk_levels import RiskLevel
+            from full_pipeline import PlanRunner
+            from executor.executor import Executor
             audit_db.sync_policy_rules()
-            ex = Executor()
-            call = understand(text)
-            try:
-                result = ex.run(call["tool"], call["args"])
-                self.on_event({"type": "action_result", "call": call, "result": result})
-            except ConfirmationRequired as e:
-                self.on_event({"type": "needs_confirmation", "reason": e.decision.reason, "level": e.decision.level.name})
-                approved = self._voice_confirm(e.decision)
-                result = ex.run(call["tool"], call["args"], user_confirmed=approved)
-                self.on_event({"type": "action_result", "call": call, "result": result, "was_confirmation": True})
+            audit_db.touch_session(self.session_id, last_instruction=text)
+            runner = PlanRunner(text, Executor(), session_id=self.session_id)
+            plan_result = runner.run()
+            while plan_result["status"] == "plan_needs_confirmation":
+                self.on_event({"type": "needs_confirmation", "reason": plan_result["reason"], "level": plan_result["level"]})
+                approved = self._voice_confirm(runner.pending_decision)
+                plan_result = runner.resume(approved=approved)
+            if plan_result["status"] == "plan_done":
+                self.on_event({"type": "action_result", "history": plan_result["history"], "summary": plan_result["summary"]})
+                reply_text = str(plan_result["summary"])
+            else:
+                self.on_event({"type": "action_result", "history": plan_result.get("history", []), "error": plan_result.get("reason")})
+                reply_text = plan_result.get("reason")
+            audit_db.log_conversation(text, reply_text=reply_text, asr_model="whisper.cpp",
+                                       asr_latency_ms=asr_ms, session_id=self.session_id)
         else:
             self.on_event({"type": "acoustic_case_started", "text": text})
+            audit_db.touch_session(self.session_id, last_instruction=text, last_tool="frontdesk")
+            audit_db.log_conversation(text, reply_text="（進入Front Desk多輪引導，逐輪對話另外記在voice_dialog事件裡）",
+                                       asr_model="whisper.cpp", asr_latency_ms=asr_ms, session_id=self.session_id)
             if self.chunk_source is not None:
                 from frontdesk.voice_dialog import VoiceFrontDesk
                 vfd = VoiceFrontDesk(self.chunk_source, on_event=self.on_event)

@@ -46,12 +46,21 @@ def run_desktop_command(text: str, session_id: str = "default") -> dict:
     from executor.executor import Executor
     from executor import audit_db
     audit_db.sync_policy_rules()
-    runner = PlanRunner(text, Executor())
+    audit_db.touch_session(session_id, last_instruction=text)
+    runner = PlanRunner(text, Executor(), session_id=session_id)
     result = runner.run()
+    reply_text = None
     if result["status"] == "plan_needs_confirmation":
         _PLAN_SESSIONS[session_id] = runner
+        reply_text = f"（等待確認：{result['reason']}）"
     else:
         _PLAN_SESSIONS.pop(session_id, None)
+        if result["status"] == "plan_done":
+            reply_text = str(result["summary"])
+            audit_db.touch_session(session_id, last_tool=(result["history"][-1]["tool"] if result["history"] else None))
+        else:
+            reply_text = result.get("reason")
+    audit_db.log_conversation(text, reply_text=reply_text, session_id=session_id)
     return _plan_result_to_response(result)
 
 
@@ -65,11 +74,15 @@ def confirm_desktop_command(tool: str, args: dict, approved: bool, typed_keyword
     """
     runner = _PLAN_SESSIONS.get(session_id)
     if runner is not None:
+        from executor import audit_db
         result = runner.resume(approved=approved, typed_keyword=typed_keyword)
         if result["status"] == "plan_needs_confirmation":
             _PLAN_SESSIONS[session_id] = runner
+            reply_text = f"（等待確認：{result['reason']}）"
         else:
             _PLAN_SESSIONS.pop(session_id, None)
+            reply_text = str(result["summary"]) if result["status"] == "plan_done" else result.get("reason")
+        audit_db.log_conversation(f"（確認：{'同意' if approved else '拒絕'}）", reply_text=reply_text, session_id=session_id)
         return _plan_result_to_response(result)
 
     from executor.executor import Executor
@@ -80,7 +93,7 @@ def confirm_desktop_command(tool: str, args: dict, approved: bool, typed_keyword
     if decision.requires_typed_confirmation:
         approved = approved and (typed_keyword or "").replace(" ", "") == "確認執行"
     ex = Executor()
-    result = ex.run(tool, args, user_confirmed=approved)
+    result = ex.run(tool, args, user_confirmed=approved, session_id=session_id)
     return {"status": "done", "result": result}
 
 
