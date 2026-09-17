@@ -56,6 +56,7 @@ TOOL_IMPLEMENTATIONS = {
     "uia_select": lambda args: basic_tools.uia_select(_require(args, "pid", "uia_select"), _require(args, "control_name", "uia_select"), _require(args, "item_name", "uia_select")),
     "press_key": lambda args: basic_tools.press_key(_require(args, "key", "press_key")),
     "hotkey": lambda args: basic_tools.hotkey(_require(args, "keys", "hotkey")),
+    "speech_to_text_op": lambda args: basic_tools.speech_to_text(_require(args, "audio_path", "speech_to_text_op")),
 }
 
 

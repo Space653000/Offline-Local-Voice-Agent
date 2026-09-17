@@ -682,3 +682,39 @@ def hotkey(keys: str) -> str:
     for vk in reversed(vks):
         win32api.keybd_event(vk, 0, win32con.KEYEVENTF_KEYUP, 0)
     return f"已送出組合鍵：{keys}"
+
+
+# ---- speech_to_text_op：把一份已經存在的錄音檔轉成文字（對照35工具表，唯讀L0）----
+# 跟 listen_loop.py 的 run_asr() 是兩件事：run_asr() 處理的是「即時麥克風錄到的一段話」，
+# 這裡處理的是「使用者指定一個已經存在的.wav檔案」，兩者共用同一顆whisper.cpp medium模型，
+# 但輸入來源不同，所以獨立成一個工具而不是直接重用 run_asr()（它的參數是numpy陣列不是檔案路徑）。
+# 安全設計：這裡刻意用_require_safe_path（限使用者家目錄），不是open_file那種較寬鬆的
+# _resolve_under_home——open_file只是請Windows用預設程式打開，這裡會把檔案內容（轉成文字）
+# 回傳到LLM/對話紀錄裡，等於「讀取檔案內容」而不只是「顯示」，風險層級比open_file更接近
+# file_op的move/copy，所以套用一樣的家目錄邊界。
+
+def speech_to_text(audio_path: str) -> str:
+    import subprocess, os
+    p = _require_safe_path(audio_path, "speech_to_text_op")
+    if not p.exists():
+        raise ValueError(f"找不到錄音檔：{p}")
+    if p.suffix.lower() != ".wav":
+        raise ValueError("目前只支援.wav格式的錄音檔（whisper.cpp原生支援的格式）")
+
+    repo_root = Path(__file__).resolve().parents[2]
+    whisper_cli = repo_root / "progress/p0/build/whisper.cpp/build/bin/whisper-cli.exe"
+    whisper_model = repo_root / "progress/p0/build/whisper.cpp/models/ggml-medium.bin"
+    if not whisper_cli.exists():
+        raise RuntimeError(f"找不到whisper.cpp執行檔：{whisper_cli}（P0驗證用的build是否還在？）")
+
+    env = os.environ.copy()
+    env["PATH"] = r"C:\Program Files\LLVM\bin;" + env.get("PATH", "")
+    result = subprocess.run(
+        [str(whisper_cli), "-m", str(whisper_model), "-f", str(p), "-l", "zh", "-nt"],
+        capture_output=True, text=True, encoding="utf-8", errors="ignore", env=env,
+        cwd=str(whisper_cli.parent.parent),
+    )
+    text = result.stdout.strip()
+    if not text:
+        raise RuntimeError(f"whisper.cpp沒有輸出任何文字（可能是空白錄音，或參數/模型有問題）")
+    return text

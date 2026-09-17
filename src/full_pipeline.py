@@ -56,6 +56,7 @@ IMPLEMENTED_TOOLS_SPEC = """
 - press_key：按一個單獨的鍵（例如Enter、Escape、Tab、方向鍵、F1-F12）。args: {"key": "enter"}
 - hotkey：按一個組合鍵（例如存檔Ctrl+S、復原Ctrl+Z）。args: {"keys": "ctrl+s"}
   （不接受 Win+R、Win+L 這類會繞過安全機制或過度干擾的組合鍵）
+- speech_to_text_op：把一份已經存在的.wav錄音檔轉成文字。args: {"audio_path": "檔案路徑"}
 """
 
 TOOL_ENUM = ["open_app", "close_window", "get_datetime",
@@ -65,7 +66,7 @@ TOOL_ENUM = ["open_app", "close_window", "get_datetime",
              "summarize_doc", "text_input_op", "file_op", "power_op",
              "get_active_window", "list_windows", "focus_window",
              "uia_click", "uia_set_text", "uia_select",
-             "press_key", "hotkey"]
+             "press_key", "hotkey", "speech_to_text_op"]
 
 SCHEMA = {
     # 注意：「args」故意放在properties/required的最後一個——llama.cpp把JSON Schema轉成GBNF
