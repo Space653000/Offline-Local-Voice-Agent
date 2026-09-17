@@ -18,34 +18,60 @@ sys.path.insert(0, str(Path(__file__).parent / "frontdesk"))
 # 用 session_id 對應——本機單人使用場景，不需要真正的資料庫或分散式session store。
 _FRONTDESK_SESSIONS = {}
 
+# 桌面控制指令現在可能是多步驟（PlanRunner，對照 docs/07 進度報告P6缺口），
+# 如果卡在L2/L3確認關卡，一樣要跨HTTP請求保留這個PlanRunner的執行狀態才能continue。
+_PLAN_SESSIONS = {}
+
 
 def classify(text: str) -> dict:
     from mode_classifier import classify as _classify
     return _classify(text)
 
 
-def run_desktop_command(text: str) -> dict:
-    from full_pipeline import understand
-    from executor.executor import Executor, ConfirmationRequired
+def _plan_result_to_response(result: dict) -> dict:
+    """把 PlanRunner.run()/resume() 回傳的內部格式，轉成HTTP API對外的格式，
+    盡量維持跟舊版單步驟API相容的欄位命名（call/reason/level...），減少前端要改的東西。"""
+    if result["status"] == "plan_done":
+        return {"status": "done", "result": {"executed": True, "result": result["summary"]}, "history": result["history"]}
+    if result["status"] == "plan_needs_confirmation":
+        return {
+            "status": "needs_confirmation", "call": result["call"], "reason": result["reason"],
+            "level": result["level"], "requires_typed_confirmation": result["requires_typed_confirmation"],
+        }
+    return {"status": "error", "reason": result.get("reason", "任務沒有完成"), "history": result.get("history", [])}
+
+
+def run_desktop_command(text: str, session_id: str = "default") -> dict:
+    from full_pipeline import PlanRunner
+    from executor.executor import Executor
     from executor import audit_db
     audit_db.sync_policy_rules()
-    ex = Executor()
-    call = understand(text)
-    try:
-        result = ex.run(call["tool"], call["args"])
-        return {"status": "done", "call": call, "result": result}
-    except ConfirmationRequired as e:
-        return {
-            "status": "needs_confirmation", "call": call, "reason": e.decision.reason,
-            "level": e.decision.level.name, "requires_typed_confirmation": e.decision.requires_typed_confirmation,
-        }
+    runner = PlanRunner(text, Executor())
+    result = runner.run()
+    if result["status"] == "plan_needs_confirmation":
+        _PLAN_SESSIONS[session_id] = runner
+    else:
+        _PLAN_SESSIONS.pop(session_id, None)
+    return _plan_result_to_response(result)
 
 
-def confirm_desktop_command(tool: str, args: dict, approved: bool, typed_keyword: str = None) -> dict:
+def confirm_desktop_command(tool: str, args: dict, approved: bool, typed_keyword: str = None, session_id: str = "default") -> dict:
     """
     文字版確認：L3(危險操作)一樣要求打出關鍵字「確認執行」，不能只回 true/false，
     跟語音版 _voice_confirm 的安全設計原則一致（不能只按/說「是」就等於同意危險操作）。
+
+    如果這個session有正在等待確認的PlanRunner（多步驟任務卡在中途），優先continue那個，
+    這樣確認完之後規劃者才能接著問下一步；沒有的話（單步驟舊版流程），直接跑一次性確認。
     """
+    runner = _PLAN_SESSIONS.get(session_id)
+    if runner is not None:
+        result = runner.resume(approved=approved, typed_keyword=typed_keyword)
+        if result["status"] == "plan_needs_confirmation":
+            _PLAN_SESSIONS[session_id] = runner
+        else:
+            _PLAN_SESSIONS.pop(session_id, None)
+        return _plan_result_to_response(result)
+
     from executor.executor import Executor
     from executor import audit_db
     from policy.policy_engine import PolicyEngine
@@ -66,7 +92,7 @@ def process_text(text: str, session_id: str) -> dict:
     """
     mode = classify(text)
     if mode["mode"] == "desktop_control":
-        result = run_desktop_command(text)
+        result = run_desktop_command(text, session_id)
         result["mode"] = "desktop_control"
         return result
     else:

@@ -333,20 +333,21 @@ h1,h2,h3{font-family:inherit;margin:0;text-wrap:balance}
         '<button class="btn-yes" id="confirmYes">同意執行</button>' +
         '<button class="btn-no" id="confirmNo">取消</button>' +
       '</div>';
-    document.getElementById('confirmYes').addEventListener('click', function(){
+    function sendConfirm(approved){
       var typed = requiresTyped ? (document.getElementById('confirmKeyword').value || '') : null;
       confirmCard.hidden = true;
       fetch('/api/confirm', {
         method: 'POST', headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({tool: call.tool, args: call.args, approved: true, typed_keyword: typed}),
-      }).then(function(r){ return r.json(); }).then(function(res){
-        showResponse(JSON.stringify(res.result || res, null, 0));
+        body: JSON.stringify({tool: call.tool, args: call.args, approved: approved, typed_keyword: typed, session_id: sessionId}),
+      }).then(function(r){ return r.json(); }).then(function(result){
+        // 多步驟任務可能確認完一步後，馬上又卡在下一個需要確認的步驟，一律走handleResult統一處理
+        handleResult(result);
+      }).catch(function(){
+        showResponse('連不到語音助理伺服器，請確認 serve.py 有在跑');
       });
-    });
-    document.getElementById('confirmNo').addEventListener('click', function(){
-      confirmCard.hidden = true;
-      showResponse('已取消，沒有執行');
-    });
+    }
+    document.getElementById('confirmYes').addEventListener('click', function(){ sendConfirm(true); });
+    document.getElementById('confirmNo').addEventListener('click', function(){ sendConfirm(false); });
   }
 
   function renderFrontdesk(step){

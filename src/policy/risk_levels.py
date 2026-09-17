@@ -30,7 +30,10 @@ TOOL_RISK_TABLE = {
     "adjust_brightness": RiskLevel.L1_ROUTINE,
     "take_screenshot": RiskLevel.L1_ROUTINE,
     "clipboard_op": RiskLevel.L1_ROUTINE,
-    "file_op": RiskLevel.L2_SENSITIVE,        # 刪除/重新命名/建立檔案，可能影響使用者資料
+    "file_op": RiskLevel.L1_ROUTINE,           # 基準是L1（find/open是唯讀，風險低）；move/copy/rename/create_folder/delete
+                                                # 這些真的會改變檔案系統狀態的動作，由下面ESCALATION_RULES個別拉高，
+                                                # 不能整個工具都當作L2——不然像PlanRunner裡「先找檔案」這種純查詢步驟
+                                                # 也會被迫要求使用者確認，多此一舉（docs/07進度報告驗證PlanRunner時發現）
     "cloud_file_op": RiskLevel.L2_SENSITIVE,  # 牽涉外部雲端服務
     "power_op": RiskLevel.L3_DANGEROUS,       # 關機/重開/休眠，會中斷使用者正在做的事
     "network_toggle": RiskLevel.L2_SENSITIVE,  # 原本設L1，P3實測時意識到：關掉Wi-Fi可能打斷使用者在同一台電腦上的其他活動（下載/通話/瀏覽），不是單純「可逆」就等於「低風險」，升級成L2
@@ -69,6 +72,10 @@ TOOL_RISK_TABLE = {
 # 特定工具 + 特定參數組合可以再往上升級（例如 file_op 若 action=delete 就算 L3）
 ESCALATION_RULES = {
     ("file_op", "delete"): RiskLevel.L3_DANGEROUS,
+    ("file_op", "move"): RiskLevel.L2_SENSITIVE,
+    ("file_op", "copy"): RiskLevel.L2_SENSITIVE,
+    ("file_op", "rename"): RiskLevel.L2_SENSITIVE,
+    ("file_op", "create_folder"): RiskLevel.L2_SENSITIVE,
     ("git_op", "push"): RiskLevel.L3_DANGEROUS,
     ("git_op", "merge"): RiskLevel.L3_DANGEROUS,
     ("cloud_file_op", "delete"): RiskLevel.L3_DANGEROUS,

@@ -106,6 +106,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 data = self._read_json_body()
                 result = confirm_desktop_command(
                     data["tool"], data["args"], data["approved"], data.get("typed_keyword"),
+                    data.get("session_id", "default"),
                 )
                 self._send_json(result)
                 return

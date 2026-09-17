@@ -341,18 +341,39 @@ def _require_safe_path(path_str: str, action: str) -> Path:
     return p
 
 
-def find_file(name: str, search_dir: str = None) -> str:
+def find_file(name: str = None, search_dir: str = None, extension: str = None, newest_only: bool = False) -> str:
+    """
+    對照 docs/07 進度報告P6缺口：藍圖範例「找到Downloads裡最新的PDF」需要「依修改時間排序、
+    只回報最新一個」的能力，原本只會回傳一堆符合名稱的項目，不知道哪個最新——
+    加上 extension（副檔名篩選）+ newest_only（只回傳修改時間最新的一個）之後才補上這個能力。
+    """
     search_root = _resolve_under_home(search_dir) if search_dir else Path.home()
     if not search_root.exists():
         raise ValueError(f"搜尋目錄不存在：{search_root}")
+
+    pattern = f"*{name}*" if name else "*"
+    ext = ("." + extension.lstrip(".")).lower() if extension else None
+
     matches = []
-    for p in search_root.rglob(f"*{name}*"):
-        matches.append(str(p))
-        if len(matches) >= 20:
-            break
+    for p in search_root.rglob(pattern):
+        if not p.is_file():
+            continue
+        if ext and p.suffix.lower() != ext:
+            continue
+        matches.append(p)
+
     if not matches:
-        return f"在 {search_root} 底下找不到包含「{name}」的檔案或資料夾"
-    return f"找到 {len(matches)} 個符合的項目：\n" + "\n".join(matches)
+        return f"在 {search_root} 底下找不到符合條件的檔案（name={name}, extension={extension}）"
+
+    matches.sort(key=lambda p: p.stat().st_mtime, reverse=True)
+
+    if newest_only:
+        newest = matches[0]
+        mtime = datetime.datetime.fromtimestamp(newest.stat().st_mtime).strftime("%Y-%m-%d %H:%M:%S")
+        return f"最新的符合檔案是：{newest}（修改時間：{mtime}）"
+
+    listed = matches[:20]
+    return f"找到 {len(matches)} 個符合的項目（依修改時間新到舊排序）：\n" + "\n".join(str(p) for p in listed)
 
 
 def open_file(path: str) -> str:
@@ -426,7 +447,7 @@ def delete_file(path: str) -> str:
 
 def file_op(action: str, **kwargs) -> str:
     handlers = {
-        "find": lambda: find_file(kwargs["name"], kwargs.get("search_dir")),
+        "find": lambda: find_file(kwargs.get("name"), kwargs.get("search_dir"), kwargs.get("extension"), bool(kwargs.get("newest_only"))),
         "open": lambda: open_file(kwargs["path"]),
         "move": lambda: move_file(kwargs["src"], kwargs["dst"]),
         "copy": lambda: copy_file(kwargs["src"], kwargs["dst"]),

@@ -164,8 +164,8 @@ table.dbtable td.field{font-weight:700;font-family:ui-monospace,Menlo,Consolas,m
               stroke-dasharray="169.6" stroke-dashoffset="110" transform="rotate(-90 32 32)"/>
           </svg>
           <div>
-            <b>60%</b> <span class="label"><span lang-zh>整體工程進度（P0～P6 共 7 大階段）</span><span lang-en>overall build progress (7 phases, P0–P6)</span></span>
-            <div class="progressbar" style="width:220px"><i style="width:60%"></i></div>
+            <b>62%</b> <span class="label"><span lang-zh>整體工程進度（P0～P6 共 7 大階段）</span><span lang-en>overall build progress (7 phases, P0–P6)</span></span>
+            <div class="progressbar" style="width:220px"><i style="width:62%"></i></div>
           </div>
         </div>
         <a href="companion.html" style="text-decoration:none">
@@ -269,6 +269,14 @@ table.dbtable td.field{font-weight:700;font-family:ui-monospace,Menlo,Consolas,m
         </div>
       </section>
 
+      <section id="planner">
+        <div class="sec-head"><h2><span lang-zh>補上多步驟規劃：一句話可以拆成幾個連續動作了</span><span lang-en>Multi-step planning added: one sentence, several chained actions</span></h2></div>
+        <div class="stack">
+          <p lang-zh>藍圖最終驗收要求的例子是「找到Downloads裡最新的PDF，打開它，然後把檔名告訴我」——這種話裡包含三個依序動作，而且第二步（開哪個檔案）要等第一步真的執行完才知道答案，原本的系統只能處理一句話對應一個動作。現在補上了：AI會先判斷這句話是不是需要好幾步，如果是，就一步一步來，每一步都用「上一步真正執行後的結果」決定下一步要做什麼，不是自己憑空亂猜檔名。用真實測試（真的建測試檔案）連續驗證4次都正確：找到真正最新的檔案、用真實路徑打開它、正確講出檔名。單一動作的指令（像「現在幾點」）完全不受影響，一樣快。</p>
+          <p lang-en>The blueprint's final acceptance example is "find the newest PDF in Downloads, open it, then tell me the filename" — three chained actions where step two (which file to open) can't be known until step one has actually run. The system used to handle only one action per sentence. Now it decides upfront whether a sentence needs multiple steps, and if so works through them one at a time, each step using the real result of the previous one rather than guessing a filename out of thin air. Verified correct across 4 real test runs (with real test files): found the genuinely newest file, opened it using the real path, correctly reported the filename. Single-action commands ("what time is it") are unaffected and just as fast.</p>
+        </div>
+      </section>
+
       <section id="aeris-orders">
         <div class="sec-head"><h2><span lang-zh>送給 AERIS 的訂單</span><span lang-en>Orders sent to AERIS</span></h2></div>
         <p class="sec-sub" lang-zh>語音代理人（這個介面）判斷是聲學工程問題時，會引導你把需求講清楚，產生一份「訂單」交給 AERIS 後台處理。這裡列出最近送出的訂單跟目前狀態。</p>
@@ -325,8 +333,8 @@ table.dbtable td.field{font-weight:700;font-family:ui-monospace,Menlo,Consolas,m
       </section>
 
       <div style="text-align:center;color:var(--sub);font-size:11.5px;margin-top:30px">
-        <span lang-zh>更新時間 2026-09-17 · P3新增檔案操作/電源控制/UIA原語 · 完整技術報告在 progress/ 資料夾跟 docs/07 進度報告</span>
-        <span lang-en>Updated 2026-09-17 · P3 added file ops/power control/UIA primitives · full technical reports in the progress/ folder and docs/07</span>
+        <span lang-zh>更新時間 2026-09-17 · P3新增檔案操作/電源控制/UIA原語 · P6補上多步驟規劃 · 完整技術報告在 progress/ 資料夾跟 docs/07 進度報告</span>
+        <span lang-en>Updated 2026-09-17 · P3 added file ops/power control/UIA primitives · P6 added multi-step planning · full technical reports in the progress/ folder and docs/07</span>
       </div>
     </main>
 
@@ -339,6 +347,7 @@ table.dbtable td.field{font-weight:700;font-family:ui-monospace,Menlo,Consolas,m
       <a href="#milestone"><span lang-zh>最新里程碑</span><span lang-en>Latest Milestone</span></a>
       <a href="#blueprint-audit"><span lang-zh>藍圖盤點</span><span lang-en>Blueprint Audit</span></a>
       <a href="#uia-primitives"><span lang-zh>UIA原語</span><span lang-en>UIA Primitives</span></a>
+      <a href="#planner"><span lang-zh>多步驟規劃</span><span lang-en>Multi-step Planning</span></a>
       <a href="#aeris-orders"><span lang-zh>AERIS 訂單</span><span lang-en>AERIS Orders</span></a>
       <a href="#roadmap"><span lang-zh>接下來</span><span lang-en>Roadmap</span></a>
       <a href="#backend"><span lang-zh>後端/資料庫</span><span lang-en>Backend/DB</span></a>
