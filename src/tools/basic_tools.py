@@ -5,28 +5,19 @@
 每個工具都是獨立、參數固定、能單獨稽核的函式，不是丟一串字串去執行。
 """
 import subprocess
+import sys
 import datetime
 from pathlib import Path
 
-KNOWN_APPS = {
-    "notepad": "notepad.exe",
-    "記事本": "notepad.exe",
-    "calculator": "calc.exe",
-    "小算盤": "calc.exe",
-    "explorer": "explorer.exe",
-    "檔案總管": "explorer.exe",
-    "settings": "ms-settings:",
-    "設定": "ms-settings:",
-}
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from config_loader import load_tools_config
 
-
-# Windows 11 上有些內建程式（記事本、小算盤...）現在是 MSIX 封裝的商店應用程式，
-# system32 裡的 .exe 只是個轉發殼層，啟動後會馬上結束，真正的視窗跑在完全不同的 PID 底下。
-# 直接信任 Popen 回傳的 pid 會抓錯（P3 實測踩到的坑），改成比對啟動前後的行程差異來抓到真正的 PID。
-REAL_PROCESS_NAME = {
-    "notepad.exe": "Notepad.exe",
-    "calc.exe": "CalculatorApp.exe",
-}
+# 對照 docs/07 進度報告第11節：這兩張表原本寫死在這裡，現在外部化到 config/tools.yaml，
+# 使用者可以直接改YAML調整能開哪些App，不需要碰程式碼。這是白名單（安全邊界），跟
+# executor/audit_db.py 的 known_apps 表（單純「用過的紀錄」）是兩件事。
+_tools_cfg = load_tools_config()
+KNOWN_APPS = _tools_cfg.get("known_apps") or {}
+REAL_PROCESS_NAME = _tools_cfg.get("real_process_name") or {}
 
 
 def _running_pids(process_name: str) -> set:

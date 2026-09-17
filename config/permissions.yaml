@@ -1,0 +1,85 @@
+# 權限分級表（對照 docs/01 藍圖第9節、docs/03 藍圖第2節、CLAUDE.md 施工鐵則）
+#
+# L0_READONLY  唯讀查詢：不改變系統任何狀態，免確認
+# L1_ROUTINE   一般可逆操作：會改變狀態，但容易復原（開程式、調音量），免確認
+# L2_SENSITIVE 敏感操作：不容易復原或牽涉外部資源（刪檔、寄信、雲端上傳），需要二次確認
+# L3_DANGEROUS 危險操作：破壞性或難以復原（關機、清理垃圾檔、解決合併衝突），一定要明確確認，
+#              且每次都要問，不可記住「這次都同意」
+#
+# 對照 docs/07 進度報告第11節指出的落差：這些原本寫死在 policy/risk_levels.py 的 Python
+# 字典裡，使用者要調整權限規則得改程式碼。外部化成這份 YAML，程式邏輯（PolicyEngine的判斷
+# 演算法、L0~L3的意義）還是留在 policy/risk_levels.py，只有「這張表本身的資料」搬出來。
+
+tools:
+  open_app: {level: L1_ROUTINE}
+  close_window:
+    level: L2_SENSITIVE
+    note: "docs/01第9節原始藍圖明確把「關閉程式」列在L2（可能有未存檔內容），原本誤設成L1"
+  window_op: {level: L1_ROUTINE}
+  set_volume: {level: L1_ROUTINE}
+  media_control: {level: L1_ROUTINE}
+  get_datetime: {level: L0_READONLY}
+  get_weather: {level: L0_READONLY}
+  get_exchange_rate: {level: L0_READONLY}
+  adjust_brightness: {level: L1_ROUTINE}
+  take_screenshot: {level: L1_ROUTINE}
+  clipboard_op: {level: L1_ROUTINE}
+  file_op:
+    level: L1_ROUTINE
+    note: >
+      基準是L1（find/open是唯讀，風險低）；move/copy/rename/create_folder/delete這些真的會
+      改變檔案系統狀態的動作，由下面escalation_rules個別拉高，不能整個工具都當作L2——不然像
+      PlanRunner裡「先找檔案」這種純查詢步驟也會被迫要求使用者確認，多此一舉
+      （docs/07進度報告驗證PlanRunner時發現）
+  cloud_file_op: {level: L2_SENSITIVE, note: "牽涉外部雲端服務"}
+  power_op: {level: L3_DANGEROUS, note: "關機/重開/休眠，會中斷使用者正在做的事"}
+  network_toggle:
+    level: L2_SENSITIVE
+    note: >
+      原本設L1，P3實測時意識到：關掉Wi-Fi可能打斷使用者在同一台電腦上的其他活動
+      （下載/通話/瀏覽），不是單純「可逆」就等於「低風險」，升級成L2
+  calendar_op: {level: L1_ROUTINE}
+  reminder_op: {level: L1_ROUTINE}
+  alarm_op: {level: L1_ROUTINE}
+  print_or_scan: {level: L1_ROUTINE}
+  photo_edit: {level: L1_ROUTINE}
+  text_input_op: {level: L1_ROUTINE}
+  text_to_speech_op: {level: L0_READONLY}
+  speech_to_text_op: {level: L0_READONLY}
+  translate: {level: L0_READONLY}
+  calculator: {level: L0_READONLY}
+  email_op: {level: L2_SENSITIVE, note: "寄信/刪信是對外或不可逆動作"}
+  video_call_op: {level: L1_ROUTINE}
+  record_screen: {level: L1_ROUTINE}
+  system_maintenance: {level: L3_DANGEROUS, note: "清理垃圾檔/安裝更新可能不可逆"}
+  task_scheduler_op: {level: L2_SENSITIVE}
+  startup_program_op: {level: L2_SENSITIVE}
+  driver_op: {level: L3_DANGEROUS, note: "更新驅動程式風險較高"}
+  dev_tool_op: {level: L2_SENSITIVE, note: "執行程式碼本身有風險"}
+  git_op: {level: L2_SENSITIVE, note: "push/merge 可能造成程式碼遺失"}
+  summarize_doc: {level: L0_READONLY}
+
+  # 對照 docs/01 藍圖第7節的 UIA 原語（docs/07 進度報告抓到的缺口，這批補上）
+  get_active_window: {level: L0_READONLY}
+  list_windows: {level: L0_READONLY}
+  focus_window: {level: L1_ROUTINE}
+  uia_click: {level: L2_SENSITIVE, note: "點到什麼按鈕效果不可預期，比照file_op的謹慎程度"}
+  uia_set_text: {level: L2_SENSITIVE}
+  uia_select: {level: L2_SENSITIVE}
+  press_key: {level: L1_ROUTINE, note: "多是導覽用的單鍵（Enter/Esc/方向鍵），風險低"}
+  hotkey: {level: L2_SENSITIVE, note: "組合鍵威力較大（例如Alt+F4關視窗），黑名單擋掉最危險的幾個"}
+
+# 特定工具 + 特定參數組合可以再往上升級（例如 file_op 若 action=delete 就算 L3）。
+# 只能升級，PolicyEngine不接受讓等級變低的escalation規則（安全設計：寧可誤判成更危險，
+# 不能反過來把原本該確認的動作放行）。
+escalation_rules:
+  - {tool: file_op, action: delete, level: L3_DANGEROUS}
+  - {tool: file_op, action: move, level: L2_SENSITIVE}
+  - {tool: file_op, action: copy, level: L2_SENSITIVE}
+  - {tool: file_op, action: rename, level: L2_SENSITIVE}
+  - {tool: file_op, action: create_folder, level: L2_SENSITIVE}
+  - {tool: git_op, action: push, level: L3_DANGEROUS}
+  - {tool: git_op, action: merge, level: L3_DANGEROUS}
+  - {tool: cloud_file_op, action: delete, level: L3_DANGEROUS}
+  - {tool: email_op, action: delete, level: L3_DANGEROUS}
+  - {tool: email_op, action: send, level: L3_DANGEROUS}

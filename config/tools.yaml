@@ -1,0 +1,23 @@
+# 應用程式白名單（對照 open_app 工具的安全設計：只能開這裡列出的程式，不接受任意字串）。
+# 這是安全邊界，跟 executor/audit_db.py 的 known_apps 表（單純「用過的紀錄」）是兩件事——
+# 那張表不會反過來放寬這份白名單。
+#
+# 對照 docs/07 進度報告第11節指出的落差：原本寫死在 tools/basic_tools.py 的 Python 字典裡。
+
+known_apps:
+  notepad: notepad.exe
+  記事本: notepad.exe
+  calculator: calc.exe
+  小算盤: calc.exe
+  explorer: explorer.exe
+  檔案總管: explorer.exe
+  settings: "ms-settings:"
+  設定: "ms-settings:"
+
+# Windows 11 上有些內建程式（記事本、小算盤...）現在是 MSIX 封裝的商店應用程式，
+# system32 裡的 .exe 只是個轉發殼層，啟動後會馬上結束，真正的視窗跑在完全不同的 PID 底下。
+# 直接信任 Popen 回傳的 pid 會抓錯（P3 實測踩到的坑），改成比對啟動前後的行程差異來抓到真正的
+# PID，這張表記錄「殼層exe」對應「真正的行程名稱」。
+real_process_name:
+  notepad.exe: Notepad.exe
+  calc.exe: CalculatorApp.exe

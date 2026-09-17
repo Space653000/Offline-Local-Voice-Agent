@@ -126,6 +126,16 @@
 2. 直接測L3決策：隨口說「對阿好」→ 正確拒絕（approved=False）；講出關鍵字「確認執行」→ 正確通過（approved=True）
 3. 過程中順便發現並修正一個真實風險分級問題：`network_toggle`（Wi-Fi開關）原本設L1（免確認），但意識到關Wi-Fi可能打斷使用者在同一台電腦上的其他網路活動（下載/通話/瀏覽），不是「可逆」就等於「低風險」，升級成L2
 
+## config/ 外部化設定（對照 docs/07 進度報告第11節）
+
+`docs/07`第11節指出：藍圖第15節建議的專案結構有`config/`資料夾放`permissions.yaml`等設定檔，但這個專案一直沒有，權限規則(`TOOL_RISK_TABLE`)跟App白名單(`KNOWN_APPS`)都寫死在Python檔案裡，使用者想調整規則得改程式碼——這跟這個專案「新手友善」的目標有點矛盾。這次補上：
+
+- 新增`config/permissions.yaml`（35個工具的風險等級+10條escalation規則）跟`config/tools.yaml`（App白名單+MSIX殼層對照表），資料本身搬出Python檔案
+- 新增`src/config_loader.py`統一讀取入口，**安全設計是核心重點**：任何載入失敗（檔案不存在、YAML格式錯誤、風險等級名稱打錯字）一律直接丟例外讓程式啟動失敗，不能悄悄退回某種預設權限表——這種安全關鍵資料寧可讓程式開不起來，也不能在資料有問題時還假裝一切正常運作
+- `policy/risk_levels.py`跟`tools/basic_tools.py`改成從YAML載入，但保留完全一樣的`TOOL_RISK_TABLE`/`ESCALATION_RULES`/`KNOWN_APPS`/`REAL_PROCESS_NAME`這幾個模組層級變數名稱跟資料型別，`PolicyEngine`跟其他呼叫方完全不用改
+- **端到端真實驗證**：逐一比對YAML載入後的41個工具等級跟10條escalation規則，跟改動前的硬編碼資料**完全一致，沒有任何一個等級跑掉**；重跑`test_listen_loop_simulated.py`跟`test_l3_confirmation.py`兩個既有回歸測試都正常通過；也故意測試了YAML格式錯誤（打錯風險等級名稱）會正確丟出`ValueError`而不是悄悄接受，證明安全設計有效
+- **踩坑記錄**：YAML裡`ms-settings:`這個值（結尾是冒號）第一次寫沒加引號，被PyYAML誤判成巢狀對照表的開始，丟出`ScannerError`——這種「值本身看起來像YAML語法」的字串一定要明確加引號，這是實測抓到的真實問題
+
 ## 補上UI五態模型，順便抓到兩個真實bug（對照 docs/07 進度報告第10節）
 
 藍圖第18節要求UI只需要5個canonical狀態（Listening/Thinking/Executing/Waiting confirmation/Stopped），`docs/07`第10節指出原本沒有明確對應，尤其「Executing」跟「Waiting confirmation」沒有獨立可視化。這次在`listen_loop.py`加了`CANONICAL_STATE_MAP`，把現有細顆粒度狀態（idle/wake_detected/listening_command/thinking/speaking/front_desk/stopped/not_running）跟新增的兩個狀態（`executing`/`waiting_confirmation`）都對應到藍圖的5態，`LiveStateWriter.update()`寫進`live_state.json`時多帶一個`canonical_state`欄位（細顆粒度狀態不拿掉，給`companion.html`的動畫用；藍圖要求的5態並存，不是二選一）。`companion.html`也加了這兩個新狀態的圖示/文字/顏色，用假的`live_state.json`實際在瀏覽器截圖確認過畫面正確（橘色驚嘆號=等待確認、旋轉齒輪=執行中）。
