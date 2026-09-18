@@ -289,8 +289,16 @@ def _llm_complete(system_prompt: str, user_content: str, max_tokens=300) -> str:
     return r.json()["choices"][0]["message"]["content"].strip()
 
 
-def translate(text: str, target_language: str = "英文") -> str:
-    return _llm_complete(f"把使用者的句子翻譯成{target_language}，只輸出翻譯結果，不要解釋。", text, max_tokens=200)
+def translate(text: str = None, target_language: str = "英文", path: str = None) -> str:
+    # 跟summarize_doc同一個理由：可以直接翻譯本機檔案，不用使用者先把整份文件講出來或貼文字
+    if path:
+        p = _require_safe_path(path, "translate")
+        if not p.exists():
+            raise ValueError(f"找不到檔案：{p}")
+        text = _extract_text_from_file(p)
+    if not text or not text.strip():
+        raise ValueError("translate 需要 text 或 path 其中之一，而且內容不能是空的")
+    return _llm_complete(f"把使用者的句子翻譯成{target_language}，只輸出翻譯結果，不要解釋。", text[:30000], max_tokens=2000)
 
 
 # 參考主流雲端AI助理「上傳檔案直接問內容」的做法（使用者明確要求：介面/功能可以參考雲端AI

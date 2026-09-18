@@ -43,7 +43,8 @@ TOOL_IMPLEMENTATIONS = {
     ),
     "calculator": lambda args: basic_tools.calculate(_require(args, "expression", "calculator")),
     "text_to_speech_op": lambda args: basic_tools.text_to_speech(_require(args, "text", "text_to_speech_op")),
-    "translate": lambda args: basic_tools.translate(_require(args, "text", "translate"), args.get("target_language", "英文")),
+    "translate": lambda args: basic_tools.translate(
+        text=args.get("text"), target_language=args.get("target_language", "英文"), path=args.get("path")),
     "summarize_doc": lambda args: basic_tools.summarize_doc(text=args.get("text"), path=args.get("path")),
     "text_input_op": lambda args: basic_tools.type_text(_require(args, "text", "text_input_op")),
     "file_op": lambda args: basic_tools.file_op(_require(args, "action", "file_op"), **{k: v for k, v in args.items() if k != "action"}),

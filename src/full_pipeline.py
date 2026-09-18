@@ -33,6 +33,7 @@ IMPLEMENTED_TOOLS_SPEC = """
 - calculator：數學計算。args: {"expression": "3+5*2"}（只能是數字跟+-*/()運算，不能有文字）
 - text_to_speech_op：把文字唸出來。args: {"text": "要唸的內容"}
 - translate：翻譯句子。args: {"text": "原文", "target_language": "英文"}
+  或 {"path": "檔案路徑", "target_language": "英文"}（直接翻譯本機檔案內容；支援.txt/.md/.pdf/.docx）
 - summarize_doc：整理內容成摘要重點。args: {"text": "要摘要的內容"}
   或 {"path": "檔案路徑"}（直接讀本機檔案內容來摘要，不用使用者先貼文字；支援.txt/.md/.pdf/.docx）
 - text_input_op：把文字輸入到目前作用中的欄位。args: {"text": "要輸入的內容"}

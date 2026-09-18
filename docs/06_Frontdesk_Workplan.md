@@ -401,6 +401,12 @@
 
 跑完整回歸測試（8個測試檔）全部通過。
 
+## translate也補上讀本機檔案的能力（重用summarize_doc的檔案解析邏輯）
+
+同一個理由（本機檔案翻譯需求真實存在，使用者不會想把整份文件講出來或貼文字），`translate`補上跟`summarize_doc`一樣的`path`參數，重用同一個`_extract_text_from_file()`（支援.txt/.md/.pdf/.docx），`args`向下相容原本的`text`直貼用法。順便把純文字翻譯的`max_tokens`從200調高到2000——原本的200 tokens（約150字）對一句話翻譯夠用，但對整份文件會太短被截斷，這個調整同時讓短句跟長文件都能正常完整輸出，不影響既有短句翻譯的行為（真實測過「你好嗎」→「How are you?」還是一樣正確簡潔）。
+
+**真實測試**：對一份本機`.txt`檔案（內容是一句關於顯示卡規格的中文描述）直接呼叫`translate(path=..., target_language='英文')`，輸出「This laptop uses an RTX Spark graphics card, which has a total of 24.5GB of display memory.」，語意跟數字都正確，沒有翻譯錯誤或幻覺。8個回歸測試全部通過。
+
 ## 設計原則提醒（避免做歪）
 
 - Front Desk 只負責「收斂需求、產生 ORDER.md」，**不負責任何聲學工程判斷**——那是 AERIS 的事，本專案不應該假裝知道 leakage/driver 怎麼分析
