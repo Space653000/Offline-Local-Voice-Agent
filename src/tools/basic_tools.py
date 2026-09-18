@@ -819,10 +819,10 @@ def speech_to_text(audio_path: str) -> str:
 # 才知道目前是不是正在錄，我們只是送出使用者自己按這個鍵也會發生的同一個標準快捷鍵。
 #
 # 誠實記錄：實測時發現這台機器（這個工作環境）送出Win+Alt+R之後，Videos\Captures資料夾
-# 沒有產生任何檔案、也沒有偵測到Xbox Game Bar相關行程啟動——跟docs/07進度報告記錄過的
-# UWP應用程式（記事本/小算盤）在這個環境起不來是同一類環境限制（Xbox Game Bar本身也是
-# MSIX封裝的應用程式），不是這個工具實作本身的bug（hotkey()機制已經用小畫家驗證過真的
-# 能正確送出組合鍵）。在能正常執行UWP應用程式的機器上，這個工具應該能正常運作。
+# 沒有產生任何檔案、也沒有偵測到Xbox Game Bar相關行程啟動。docs/07第11次更新已重新查證：
+# 這跟記事本/小算盤先前的PATH解析問題（已修正）是不同根因——Game Bar背景服務本身沒有
+# 啟動（GameDVR_Enabled=1但無對應行程），屬於獨立、尚未解決的環境限制，不是這個工具實作
+# 本身的bug（hotkey()機制已經用小畫家驗證過真的能正確送出組合鍵）。
 
 def record_screen(action: str) -> str:
     if action not in ("start", "stop"):
@@ -830,3 +830,154 @@ def record_screen(action: str) -> str:
     hotkey("win+alt+r")
     verb = "開始" if action == "start" else "停止"
     return f"已送出螢幕錄影切換快捷鍵（Win+Alt+R），如果Xbox Game Bar正常回應，錄影應該已經{verb}"
+
+
+# ---- task_scheduler_op：Windows工作排程器（docs/08§5點名的「風險可控」候選工具之一）----
+# 先前判斷這16個未實作工具「需要外部服務整合」而排除，重新檢視發現這個判斷是錯的：
+# 工作排程器是Windows內建功能，schtasks.exe是系統既有二進位檔，不需要任何外部服務或網路連線，
+# 完全符合專案的100%離線原則。用固定二進位檔+受控參數呼叫subprocess，跟power_action()呼叫
+# shutdown.exe是同一種模式，不是CLAUDE.md禁止的「execute_any_shell_command萬用工具」。
+
+def task_scheduler_op(action: str, name: str = None, command: str = None,
+                       schedule: str = None, time: str = None) -> str:
+    import subprocess
+    if action == "list":
+        result = subprocess.run(["schtasks", "/query", "/fo", "CSV", "/nh"],
+                                 capture_output=True, text=True, encoding="utf-8", errors="ignore")
+        names = []
+        for line in result.stdout.splitlines():
+            parts = line.split('","')
+            if not parts:
+                continue
+            task_name = parts[0].strip('"')
+            if task_name and not task_name.startswith("\\Microsoft\\"):
+                names.append(task_name)
+        if not names:
+            return "目前沒有非系統內建的排程工作"
+        return "目前的排程工作：" + "、".join(names[:30]) + (f"（共{len(names)}項，只列前30）" if len(names) > 30 else "")
+    if action == "create":
+        if not name or not command:
+            raise ValueError("task_scheduler_op 的 create 動作需要 name 跟 command")
+        sc = (schedule or "ONCE").upper()
+        args = ["schtasks", "/create", "/tn", name, "/tr", command, "/sc", sc, "/f"]
+        if time:
+            args += ["/st", time]
+        result = subprocess.run(args, capture_output=True, text=True, encoding="utf-8", errors="ignore")
+        if result.returncode != 0:
+            raise RuntimeError(f"建立排程工作失敗：{result.stderr.strip() or result.stdout.strip()}")
+        return f"已建立排程工作「{name}」（{sc}{'，' + time if time else ''}）：{command}"
+    if action == "delete":
+        if not name:
+            raise ValueError("task_scheduler_op 的 delete 動作需要 name")
+        result = subprocess.run(["schtasks", "/delete", "/tn", name, "/f"],
+                                 capture_output=True, text=True, encoding="utf-8", errors="ignore")
+        if result.returncode != 0:
+            raise RuntimeError(f"刪除排程工作失敗：{result.stderr.strip() or result.stdout.strip()}")
+        return f"已刪除排程工作「{name}」"
+    raise ValueError(f"task_scheduler_op 不支援的 action：{action}（只接受 list/create/delete）")
+
+
+# ---- startup_program_op：開機自動啟動項目（docs/08§5點名的另一個「風險可控」候選）----
+# 用使用者自己的「啟動」資料夾（shell:startup，%APPDATA%\...\Startup）放捷徑檔，不碰登錄檔的
+# Run機碼——原因：使用者自己的啟動資料夾只影響「這個使用者帳號」，登錄檔Run機碼(尤其是
+# HKLM底下的)會影響所有使用者、且更難被使用者自己用檔案總管直接看到/清掉，前者對這個專案
+# 「操作要容易復原、使用者要能理解系統做了什麼」的原則更友善。
+
+def _startup_folder() -> Path:
+    import os
+    return Path(os.environ["APPDATA"]) / "Microsoft" / "Windows" / "Start Menu" / "Programs" / "Startup"
+
+
+def startup_program_op(action: str, name: str = None, path: str = None) -> str:
+    folder = _startup_folder()
+    if action == "list":
+        items = [p.stem for p in folder.glob("*.lnk")]
+        if not items:
+            return "目前「啟動」資料夾裡沒有任何項目"
+        return "開機自動啟動項目：" + "、".join(items)
+    if action == "add":
+        if not name or not path:
+            raise ValueError("startup_program_op 的 add 動作需要 name 跟 path")
+        target = _resolve_under_home(path) if not Path(path).is_absolute() else Path(path)
+        if not target.exists():
+            raise ValueError(f"找不到要加入啟動項的程式：{target}")
+        import win32com.client
+        shell = win32com.client.Dispatch("WScript.Shell")
+        shortcut = shell.CreateShortcut(str(folder / f"{name}.lnk"))
+        shortcut.TargetPath = str(target)
+        shortcut.WorkingDirectory = str(target.parent)
+        shortcut.save()
+        return f"已把「{name}」（{target}）加入開機自動啟動"
+    if action == "remove":
+        if not name:
+            raise ValueError("startup_program_op 的 remove 動作需要 name")
+        lnk = folder / f"{name}.lnk"
+        if not lnk.exists():
+            raise ValueError(f"「啟動」資料夾裡沒有叫「{name}」的項目")
+        lnk.unlink()
+        return f"已把「{name}」從開機自動啟動移除"
+    raise ValueError(f"startup_program_op 不支援的 action：{action}（只接受 list/add/remove）")
+
+
+# ---- driver_op：驅動程式查詢（唯讀）----
+# 只實作「查詢」，不實作「更新」——更新驅動程式風險高（可能造成硬體無法使用，且不像其他
+# L3操作那樣容易復原），config/permissions.yaml把update動作單獨拉高到L3_DANGEROUS，
+# 但目前連update本身都還沒實作，純粹是為未來預留、避免之後真的加上去時忘記標risk level。
+
+def driver_op(action: str = "list", keyword: str = None) -> str:
+    if action != "list":
+        raise ValueError(f"driver_op 目前只實作 action=list（查詢，唯讀）；不提供 update，更新驅動風險太高，這個專案不自動做")
+    import win32com.client
+    wmi = win32com.client.GetObject("winmgmts:")
+    drivers = wmi.ExecQuery("SELECT DeviceName, DriverVersion, Manufacturer FROM Win32_PnPSignedDriver")
+    rows = []
+    for d in drivers:
+        device_name = d.DeviceName or ""
+        if not device_name:
+            continue
+        if keyword and keyword.lower() not in device_name.lower():
+            continue
+        rows.append(f"{device_name}（{d.Manufacturer or '未知廠商'}，版本{d.DriverVersion or '未知'}）")
+    if not rows:
+        return f"找不到符合「{keyword}」的驅動程式" if keyword else "沒有查到任何驅動程式資訊"
+    rows = sorted(set(rows))
+    return "、".join(rows[:20]) + (f"（共{len(rows)}項，只列前20）" if len(rows) > 20 else "")
+
+
+# ---- photo_edit：本機圖片基本編輯（旋轉/縮放/裁切/灰階/翻轉）----
+# 用PIL（既有依賴，screenshot功能已經在用），只處理使用者家目錄底下的圖片檔（比照file_op的
+# 路徑安全限制）。輸出一律存成新檔案（原檔名+_edited），不覆寫原圖——即使權限表把這個工具設成
+# L1_ROUTINE（容易復原），"容易復原"的前提也是「原圖還在」，不是真的去復原一個已覆寫的檔案。
+
+def photo_edit(path: str, action: str, **kwargs) -> str:
+    from PIL import Image
+    p = _require_safe_path(path, "photo_edit")
+    if not p.exists():
+        raise ValueError(f"找不到圖片：{p}")
+    img = Image.open(p)
+    if action == "rotate":
+        degrees = kwargs.get("degrees")
+        if degrees is None:
+            raise ValueError("photo_edit 的 rotate 動作需要 degrees")
+        img = img.rotate(-float(degrees), expand=True)
+    elif action == "resize":
+        width, height = kwargs.get("width"), kwargs.get("height")
+        if not width or not height:
+            raise ValueError("photo_edit 的 resize 動作需要 width 跟 height")
+        img = img.resize((int(width), int(height)))
+    elif action == "crop":
+        box = kwargs.get("box")
+        if not box or len(box) != 4:
+            raise ValueError("photo_edit 的 crop 動作需要 box=[left, top, right, bottom]")
+        img = img.crop(tuple(int(v) for v in box))
+    elif action == "grayscale":
+        img = img.convert("L")
+    elif action == "flip_horizontal":
+        img = img.transpose(Image.FLIP_LEFT_RIGHT)
+    elif action == "flip_vertical":
+        img = img.transpose(Image.FLIP_TOP_BOTTOM)
+    else:
+        raise ValueError(f"photo_edit 不支援的 action：{action}（只接受 rotate/resize/crop/grayscale/flip_horizontal/flip_vertical）")
+    out_path = p.with_stem(p.stem + "_edited")
+    img.save(out_path)
+    return f"已完成編輯，另存為 {out_path}"

@@ -54,7 +54,11 @@ tools:
   system_maintenance: {level: L3_DANGEROUS, note: "清理垃圾檔/安裝更新可能不可逆"}
   task_scheduler_op: {level: L2_SENSITIVE}
   startup_program_op: {level: L2_SENSITIVE}
-  driver_op: {level: L3_DANGEROUS, note: "更新驅動程式風險較高"}
+  driver_op:
+    level: L0_READONLY
+    note: >
+      目前只實作action=list（唯讀查詢驅動版本，不改變系統狀態）；update尚未實作，
+      escalation_rules預留update升級到L3_DANGEROUS，避免之後真的加上去時忘記標風險等級
   dev_tool_op: {level: L2_SENSITIVE, note: "執行程式碼本身有風險"}
   git_op: {level: L2_SENSITIVE, note: "push/merge 可能造成程式碼遺失"}
   summarize_doc: {level: L0_READONLY}
@@ -83,3 +87,4 @@ escalation_rules:
   - {tool: cloud_file_op, action: delete, level: L3_DANGEROUS}
   - {tool: email_op, action: delete, level: L3_DANGEROUS}
   - {tool: email_op, action: send, level: L3_DANGEROUS}
+  - {tool: driver_op, action: update, level: L3_DANGEROUS}

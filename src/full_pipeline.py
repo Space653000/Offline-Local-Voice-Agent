@@ -59,6 +59,19 @@ IMPLEMENTED_TOOLS_SPEC = """
   （不接受 Win+R、Win+L 這類會繞過安全機制或過度干擾的組合鍵）
 - speech_to_text_op：把一份已經存在的.wav錄音檔轉成文字。args: {"audio_path": "檔案路徑"}
 - record_screen：開始或停止螢幕錄影。args: {"action": "start"|"stop"}
+- task_scheduler_op：Windows工作排程器。args: {"action": "list"}
+  或 {"action": "create", "name": "工作名稱", "command": "要執行的程式或命令", "schedule": "ONCE"|"DAILY"|"WEEKLY"|"HOURLY"|"ONLOGON"|"ONSTART", "time": "HH:MM(選填)"}
+  或 {"action": "delete", "name": "工作名稱"}
+- startup_program_op：開機自動啟動項目管理。args: {"action": "list"}
+  或 {"action": "add", "name": "項目名稱", "path": "程式路徑"}
+  或 {"action": "remove", "name": "項目名稱"}
+- driver_op：查詢已安裝的驅動程式版本（唯讀，不支援更新）。args: {"action": "list", "keyword": "選填，篩選裝置名稱關鍵字"}
+- photo_edit：本機圖片基本編輯，輸出另存新檔不覆寫原圖。
+  args: {"path": "圖片路徑", "action": "rotate", "degrees": 90}
+  或 {"path": "圖片路徑", "action": "resize", "width": 800, "height": 600}
+  或 {"path": "圖片路徑", "action": "crop", "box": [左,上,右,下]}
+  或 {"path": "圖片路徑", "action": "grayscale"}
+  或 {"path": "圖片路徑", "action": "flip_horizontal"|"flip_vertical"}
 """
 
 TOOL_ENUM = ["open_app", "close_window", "get_datetime",
@@ -68,7 +81,8 @@ TOOL_ENUM = ["open_app", "close_window", "get_datetime",
              "summarize_doc", "text_input_op", "file_op", "power_op",
              "get_active_window", "list_windows", "focus_window",
              "uia_click", "uia_set_text", "uia_select",
-             "press_key", "hotkey", "speech_to_text_op", "record_screen"]
+             "press_key", "hotkey", "speech_to_text_op", "record_screen",
+             "task_scheduler_op", "startup_program_op", "driver_op", "photo_edit"]
 
 SCHEMA = {
     # 注意：「args」故意放在properties/required的最後一個——llama.cpp把JSON Schema轉成GBNF

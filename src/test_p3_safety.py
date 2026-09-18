@@ -32,9 +32,10 @@ assert r["executed"] is True
 opened_pid = r["result"]["pid"]
 time.sleep(2)
 
-print("\n=== 測試5: 只關閉剛剛那個 pid 的記事本，不影響其他視窗（L1免確認）===")
-r = ex.run("close_window", {"pid": opened_pid})
+print("\n=== 測試5: 只關閉剛剛那個 pid 的記事本，不影響其他視窗（L2，需確認：可能有未存檔內容）===")
+r = ex.run("close_window", {"pid": opened_pid}, user_confirmed=True)
 print(r)
+assert r["executed"] is True
 
 print("\n=== 測試6: 螢幕截圖（L1免確認）===")
 r = ex.run("take_screenshot", {})

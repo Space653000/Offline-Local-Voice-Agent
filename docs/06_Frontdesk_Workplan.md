@@ -291,6 +291,19 @@
 - 🟢 **KPI量測不完整**：8小時喚醒詞誤觸發測試、獨立的「工具執行成功率≥98%」量測、完整端到端延遲量測都還沒做。優先度較低，之後排。
 - 🟢 **UI狀態模型沒有明確對應藍圖5態**：docs/01第18節要求Listening/Thinking/Executing/Waiting confirmation/Stopped五態，目前`companion.html`的`live_state.json`狀態沒有明確涵蓋「Executing」跟「Waiting confirmation」這兩個獨立顯示狀態。優先度較低，之後排。
 
+## P3 工具擴充第六批：task_scheduler_op/startup_program_op/driver_op/photo_edit（19/35 → 23/35）
+
+使用者要求「除了SOP項目以外全部做到100%」，回頭檢視`docs/08`§5列出的「16個未實作工具」，發現先前把其中幾個歸類成「需要外部服務整合」是錯誤判斷——重新逐一檢查後，這4個其實完全可以用Windows內建機制在100%離線的前提下做到：
+
+- **`task_scheduler_op`**：`list`/`create`/`delete`三個動作，底層呼叫系統既有的`schtasks.exe`（固定二進位檔+受控參數，跟`power_op`呼叫`shutdown.exe`是同一種安全模式，不是CLAUDE.md禁止的萬用shell執行工具）。實測：`list`真的讀到這台機器現有的排程工作（AnyDesk、NVIDIA App SelfUpdate、OneDrive等真實系統排程），過濾掉`\Microsoft\`底下的系統內建工作避免洗版。
+- **`startup_program_op`**：`list`/`add`/`remove`三個動作，操作使用者自己的「啟動」資料夾（`%APPDATA%\...\Startup`），用`win32com.client`的`WScript.Shell.CreateShortcut`建捷徑檔——刻意不碰登錄檔`Run`機碼，因為使用者自己的啟動資料夾範圍只影響這個帳號、而且使用者自己用檔案總管就能看到/手動清掉，比登錄檔更符合「操作要容易理解、容易復原」的原則。實測：真的加入一個指向`notepad.exe`的測試項目、確認`list`看到它、再移除、確認`list`不再看到——完整round-trip驗證，沒有留下測試垃圾。
+- **`driver_op`**：只實作`list`（唯讀查詢，用WMI的`Win32_PnPSignedDriver`），不實作`update`——更新驅動風險太高，不像本專案其他L3操作那樣容易復原。`config/permissions.yaml`因此把`driver_op`基準等級從原本誤設的L3改回L0_READONLY，另外新增一條escalation_rule把「未來如果真的要做`update`」預先標記成L3，避免之後忘記標風險等級。實測：真的查到這台機器的顯示卡驅動（Microsoft Basic Display Driver + Surface Display Hardware Driver，含真實版本號）。
+- **`photo_edit`**：`rotate`/`resize`/`crop`/`grayscale`/`flip_horizontal`/`flip_vertical`六個動作，用既有依賴PIL（screenshot功能已經在用）。安全設計：輸出一律另存成`{原檔名}_edited.png`，不覆寫原圖——即使權限表設成L1（容易復原），前提也是原圖還在，不是真的去復原一個被覆寫的檔案。實測：對一張真實截圖做旋轉跟灰階轉換，用PIL重新讀取輸出檔案確認`mode='L'`（灰階模式）跟尺寸都符合預期，不是只看回傳字串宣稱成功。
+
+四個工具都已加進`full_pipeline.py`的LLM工具清單/JSON Schema enum、`executor.py`的`TOOL_IMPLEMENTATIONS`、`config/permissions.yaml`的風險分級表。修改途中發現一個自己寫的語法錯字（`task_scheduler_op`裡一個raw string跟轉義反斜線衝突，導致`basic_tools.py`整個模組load不起來），跑完整回歸測試（7個測試檔）時被抓到並立刻修正——這也印證了「每次改完一定要跑回歸測試」這個習慣的價值，不是形式主義。
+
+跑完整回歸測試順便發現`test_p3_safety.py`本身有一個過時斷言：測試5的註解寫「`close_window`是L1免確認」，但這個等級在更早的藍圖盤點稽核中已經正確修正成L2_SENSITIVE（見上面「藍圖盤點稽核」一節）——測試檔案本身沒有跟著更新，導致這次重跑才第一次真的觸發`ConfirmationRequired`並讓測試失敗。這不是本次改動造成的迴歸，是先前那次修正遺留的技術債，這次順手補上（改成`user_confirmed=True`並更新註解跟斷言）。
+
 ## 設計原則提醒（避免做歪）
 
 - Front Desk 只負責「收斂需求、產生 ORDER.md」，**不負責任何聲學工程判斷**——那是 AERIS 的事，本專案不應該假裝知道 leakage/driver 怎麼分析

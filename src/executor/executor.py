@@ -58,6 +58,15 @@ TOOL_IMPLEMENTATIONS = {
     "hotkey": lambda args: basic_tools.hotkey(_require(args, "keys", "hotkey")),
     "speech_to_text_op": lambda args: basic_tools.speech_to_text(_require(args, "audio_path", "speech_to_text_op")),
     "record_screen": lambda args: basic_tools.record_screen(_require(args, "action", "record_screen")),
+    "task_scheduler_op": lambda args: basic_tools.task_scheduler_op(
+        _require(args, "action", "task_scheduler_op"), name=args.get("name"), command=args.get("command"),
+        schedule=args.get("schedule"), time=args.get("time")),
+    "startup_program_op": lambda args: basic_tools.startup_program_op(
+        _require(args, "action", "startup_program_op"), name=args.get("name"), path=args.get("path")),
+    "driver_op": lambda args: basic_tools.driver_op(args.get("action", "list"), keyword=args.get("keyword")),
+    "photo_edit": lambda args: basic_tools.photo_edit(
+        _require(args, "path", "photo_edit"), _require(args, "action", "photo_edit"),
+        **{k: v for k, v in args.items() if k not in ("path", "action")}),
 }
 
 
