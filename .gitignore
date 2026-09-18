@@ -11,6 +11,7 @@ progress/p1_asr_bench/*_stdout.txt
 
 # 主控台執行時期產生的狀態檔，不用進 git
 console/live_state.json
+console/wake_word_setting.json
 
 # 語音測試用的合成/錄音音檔跟暫存結果（可重新產生，不用進 git）
 src/*.wav

@@ -7,6 +7,7 @@
 - GET /api/history/<session_id> = 某個session的完整對話內容
 - POST /api/command = 文字輸入指令（companion.html的文字輸入框用，跟語音路徑共用command_processor.py）
 - POST /api/stop = 中斷這個session目前卡住的任務（PlanRunner確認中/FrontDesk問答中），對照語音路徑的「停止」指令
+- GET /api/wake_setting / POST /api/wake_setting = 讀取/設定喚醒詞開關（預設關閉，使用者要主動打勾才會開始主動聆聽並執行動作）
 - POST /api/confirm = 桌面控制L2/L3確認後的文字回覆
 - POST /api/frontdesk_reply = Front Desk文字問答下一輪回覆
 
@@ -22,6 +23,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+from wake_setting import is_wake_word_enabled, set_wake_word_enabled
 
 HANDOFF_DIR = Path("C:/0_JN1_AERIS_HANDOFF/orders")
 DELIVERY_DIR = Path("C:/0_JN1_AERIS_HANDOFF/delivery")  # 未來 AERIS 完工後可能的回傳位置，先預留判斷
@@ -90,6 +92,15 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(body)
             return
+        if self.path == "/api/wake_setting":
+            body = json.dumps({"enabled": is_wake_word_enabled()}, ensure_ascii=False).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            self.wfile.write(body)
+            return
         if self.path.startswith("/api/history/"):
             from executor import audit_db
             session_id = self.path[len("/api/history/"):]
@@ -128,6 +139,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 data = self._read_json_body()
                 result = stop_session(data.get("session_id", "default"))
                 self._send_json(result)
+                return
+            if self.path == "/api/wake_setting":
+                data = self._read_json_body()
+                set_wake_word_enabled(bool(data.get("enabled", False)))
+                self._send_json({"enabled": is_wake_word_enabled()})
                 return
             if self.path == "/api/confirm":
                 data = self._read_json_body()

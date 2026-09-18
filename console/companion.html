@@ -37,6 +37,18 @@ h1,h2,h3{font-family:inherit;margin:0;text-wrap:balance}
 
 .stage{width:100%;max-width:480px;display:flex;flex-direction:column;align-items:center;margin-top:24px}
 
+/* ---- 喚醒詞開關：使用者2026-09-18明確要求的安全控制——取代原本規劃的8小時無人值守
+   誤觸發測試，直接讓「沒打勾就不會有任何自主動作」，比統計誤觸發率更根本地解決疑慮。
+   預設關閉，樣式故意做得顯眼（不是塞在設定選單裡），讓使用者清楚知道現在是不是開著 ---- */
+.wake-toggle{width:100%;max-width:480px;display:flex;align-items:center;gap:12px;
+  background:var(--surface);border:1px solid var(--border);border-radius:14px;
+  padding:12px 16px;box-shadow:var(--shadow);margin-bottom:16px}
+.wake-toggle.on{border-color:var(--pass);background:var(--pass-bg)}
+.wake-toggle input[type=checkbox]{width:20px;height:20px;flex:none;cursor:pointer;accent-color:var(--accent)}
+.wake-toggle .wt-text{flex:1}
+.wake-toggle .wt-title{font-size:14px;font-weight:700}
+.wake-toggle .wt-sub{font-size:12px;color:var(--sub);margin-top:2px}
+
 .orb-wrap{width:180px;height:180px;display:flex;align-items:center;justify-content:center;position:relative;margin-bottom:22px}
 .orb{width:120px;height:120px;border-radius:50%;background:var(--idle-bg);border:3px solid var(--idle);
      display:flex;align-items:center;justify-content:center;font-size:44px;transition:all .4s ease;position:relative;z-index:2}
@@ -189,6 +201,14 @@ h1,h2,h3{font-family:inherit;margin:0;text-wrap:balance}
   <div class="history-detail-body" id="historyDetailBody"></div>
 </div>
 
+<div class="wake-toggle" id="wakeToggle">
+  <input type="checkbox" id="wakeCheckbox">
+  <div class="wt-text">
+    <div class="wt-title">啟用喚醒詞（「嗨小助理」）</div>
+    <div class="wt-sub" id="wakeSub">沒打勾＝完全不會主動聆聽或執行任何動作，只能用下面打字。打勾才會開始主動聽並自動執行指令。</div>
+  </div>
+</div>
+
 <div class="stage">
   <div class="orb-wrap" id="orbWrap" data-state="idle">
     <div class="ring ring2"></div>
@@ -245,8 +265,8 @@ h1,h2,h3{font-family:inherit;margin:0;text-wrap:balance}
     </div>
     <div id="onboardStep1" hidden>
       <h2>怎麼開始用？</h2>
-      <p>1. 確認電腦有麥克風、音量沒有靜音<br>
-         2. 說「<b>嗨小助理</b>」，等畫面的圓圈變成綠色<br>
+      <p>1. 最上面有一個「啟用喚醒詞」的勾選框，<b>預設是關閉的</b>——沒打勾之前，助理完全不會主動聆聽或做任何事，只能用下面打字操作，這是為了確保電腦不會在你不知情的狀況下自己做事<br>
+         2. 打勾之後，確認電腦有麥克風、音量沒有靜音，就可以說「<b>嗨小助理</b>」，等畫面的圓圈變成綠色<br>
          3. 接著說出你的指令，說完停頓一下，助理就會開始處理</p>
       <p>畫面中間的圓圈會告訴你現在的狀態：灰色是待命、綠色是在聽你說話、黃色是助理在思考、藍綠色是助理在說話。</p>
     </div>
@@ -477,8 +497,44 @@ h1,h2,h3{font-family:inherit;margin:0;text-wrap:balance}
   var textRequestInFlight = false;
   var BUSY_STATES = ['wake_detected', 'listening_command', 'thinking', 'executing', 'waiting_confirmation', 'speaking', 'front_desk'];
 
+  // ---- 喚醒詞開關：預設關閉，使用者要主動打勾才會開始主動聆聽並執行動作 ----
+  var wakeToggle = document.getElementById('wakeToggle');
+  var wakeCheckbox = document.getElementById('wakeCheckbox');
+  var wakeSub = document.getElementById('wakeSub');
+  var wakeEnabledKnown = false;
+
+  function renderWakeToggle(enabled){
+    wakeEnabledKnown = true;
+    wakeCheckbox.checked = enabled;
+    wakeToggle.classList.toggle('on', enabled);
+    wakeSub.textContent = enabled
+      ? '已開啟：可以直接說「嗨小助理」，助理會主動聽並自動執行你的指令。'
+      : '沒打勾＝完全不會主動聆聽或執行任何動作，只能用下面打字。打勾才會開始主動聽並自動執行指令。';
+  }
+  fetch('/api/wake_setting').then(function(r){ return r.json(); }).then(function(d){
+    renderWakeToggle(!!d.enabled);
+  }).catch(function(){ renderWakeToggle(false); });
+
+  wakeCheckbox.addEventListener('change', function(){
+    var enabled = wakeCheckbox.checked;
+    wakeCheckbox.disabled = true;
+    fetch('/api/wake_setting', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({enabled: enabled}),
+    }).then(function(r){ return r.json(); }).then(function(d){
+      renderWakeToggle(!!d.enabled);
+    }).catch(function(){
+      renderWakeToggle(!enabled); // 送出失敗就退回原狀態，不能讓畫面顯示的狀態跟實際不一致
+    }).finally(function(){ wakeCheckbox.disabled = false; });
+  });
+
   function applyState(data){
     var status = data.status || 'idle';
+    // live_state.json（listen_loop.py真的在跑的時候才會更新）裡也帶了wake_enabled，
+    // 拿來跟畫面上的勾選框同步——例如使用者在另一台裝置或用API直接改過，這裡也要跟著更新。
+    if (typeof data.wake_enabled === 'boolean' && data.wake_enabled !== wakeCheckbox.checked) {
+      renderWakeToggle(data.wake_enabled);
+    }
     orbWrap.setAttribute('data-state', status);
     orbIcon.textContent = ICONS[status] || '🎙️';
     var pair = STATE_TEXT[status] || [data.message || '', ''];

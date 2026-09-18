@@ -23,6 +23,7 @@ if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
 sys.path.insert(0, str(Path(__file__).parent))
 sys.path.insert(0, str(Path(__file__).parent / "frontdesk"))
 from config_loader import load_runtime_config
+from wake_setting import is_wake_word_enabled
 
 _runtime_cfg = load_runtime_config()
 
@@ -179,6 +180,13 @@ class ListenLoop:
     def process_chunk(self, chunk: np.ndarray):
         """處理一個80ms的音訊chunk。回傳這次處理後有沒有觸發完整的一次「使用者說完一句話」事件。"""
         if self.state == State.IDLE:
+            # 🔴 安全關鍵：使用者2026-09-18明確要求——喚醒詞開關沒打勾，連喚醒詞模型本身都
+            # 不能拿去跑預測，不是「跑了但忽略結果」。這樣才是真正保證「沒同意就不會有任何
+            # 動作」，而不是留一個「萬一判斷邏輯哪裡漏接還是會觸發」的後門。取代原本規劃的
+            # 8小時無人值守誤觸發測試——與其量測「多久誤觸發一次」，不如直接讓誤觸發本身
+            # 不可能導致任何動作，這是更根本的解法。
+            if not is_wake_word_enabled():
+                return None
             pred = self.wake_model.predict(chunk)
             score = pred[self.wake_model_name]
             if score > WAKE_THRESHOLD:
@@ -357,6 +365,7 @@ class LiveStateWriter:
             "status": status, "message": message,
             "canonical_state": CANONICAL_STATE_MAP.get(status, "Listening"),
             "transcript": self.transcript, "response": self.response,
+            "wake_enabled": is_wake_word_enabled(),  # 讓companion.html能顯示喚醒開關目前狀態
             "updated_at": time.time(),
         }
         tmp = self.path.with_suffix(".tmp")
