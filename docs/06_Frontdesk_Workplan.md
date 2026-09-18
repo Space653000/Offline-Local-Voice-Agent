@@ -385,6 +385,10 @@
 
 跑完整回歸測試（8個測試檔）全部通過。
 
+## 語意正確性抽查：driver_op之外還有沒有藏著同類問題
+
+`driver_op`那個中英關鍵字bug證明「執行成功率100%」不等於「答案都對」，這次額外抽查了7個有實質內容輸出的工具，人工核對答案本身而不是只看`executed`旗標：`calculator`（25×4=100、100÷4=25.0，正確）、`get_datetime`（跟系統真實時間`datetime.datetime.now()`比對，正確）、`clipboard_op`（複製「kpi_roundtrip_test_123」再貼上，內容一致）、`file_op find newest_only`（真的建立兩個修改時間差1.2秒的測試檔，確認抓到的是後建立、修改時間較新的那個，不是先建立的那個）、`translate`（「你好嗎」→「How are you?」，語意正確）、`summarize_doc`（摘要內容跟原文一致，沒有幻覺出原文沒有的資訊）、`get_active_window`（跟當下真實最前面的視窗標題比對一致）。這7個都沒有發現類似`driver_op`那種問題，這次抽查沒有再找到新的隱蔽bug，但仍然只是抽查，不是涵蓋全部33個工具的系統性驗證。
+
 ## 設計原則提醒（避免做歪）
 
 - Front Desk 只負責「收斂需求、產生 ORDER.md」，**不負責任何聲學工程判斷**——那是 AERIS 的事，本專案不應該假裝知道 leakage/driver 怎麼分析
