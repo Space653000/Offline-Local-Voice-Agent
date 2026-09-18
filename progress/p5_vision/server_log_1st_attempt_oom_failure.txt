@@ -1,0 +1,13 @@
+0.00.097.847 I cmn  common_param: common_params_print_info: verbosity = 3 (adjust with the `-lv N` CLI arg)
+0.00.098.081 W srv  llama_server: -----------------
+0.00.098.083 W srv  llama_server: CORS is set to allow all origins ('*') and no API key is set
+0.00.098.084 W srv  llama_server: this can be a security risk (cross-origin attacks)
+0.00.098.084 W srv  llama_server: more info: https://github.com/ggml-org/llama.cpp/pull/25655
+0.00.098.084 W srv  llama_server: -----------------
+0.00.105.030 I srv    load_model: loading model 'progress/p5_vision/models/Qwen3VL-8B-Instruct-Q4_K_M.gguf'
+0.00.487.235 W load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+1.03.278.010 I cmn          init: llama threadpool init, n_threads = 20
+1.03.912.460 E CUDA error: out of memory
+1.03.913.443 E   current device: 0, in function ggml_backend_cuda_buffer_set_tensor at C:\0_JN1_Offline-Local-Voice-Agent\progress\p0\build\llama.cpp\ggml\src\ggml-cuda\ggml-cuda.cu:789
+1.03.913.644 E   cudaStreamSynchronize(((cudaStream_t)0x2))
+C:\0_JN1_Offline-Local-Voice-Agent\progress\p0\build\llama.cpp\ggml\src\ggml-cuda\ggml-cuda.cu:108: CUDA error

@@ -458,6 +458,17 @@
 
 **還沒做的驗證，誠實記錄**：這次縮短是否會增加「使用者話還沒講完就被誤判成講完」的真實機率，沒有用真人測試（現有測試音檔都是固定的短句，沒有中途停頓思考的情境），這個風險目前是基於P1階段的既有經驗判斷（縮太多才會有問題，這次是中等幅度調整），不是這次量測直接驗證過的。如果之後真實使用時發現常常被打斷，需要你回饋，再往回調。
 
+## P5視覺備援：真實下載+接線測試（方案B），完整評估報告見`progress/p5_vision/EVALUATION_REPORT.md`
+
+使用者同意下載後（`Qwen/Qwen3-VL-8B-Instruct-GGUF`，官方Qwen帳號發布，Q4_K_M主模型5.03GB+Q8_0 mmproj 752MB，共約5.78GB），真實接線測試，不是只查文件。重點結果：
+
+- **第一次啟動失敗**：`llama-server.exe`預設`-c`（context size）「0=從模型讀取」，Qwen3-VL原生context很大，直接CUDA out of memory。加`-c 4096`限制之後成功載入——真實踩到的問題跟真實修法。
+- ✅ **跟文字LLM同時常駐（方案B核心目標）達成**：兩個`llama-server`同時跑（8811文字、8812視覺），`nvidia-smi`實測總共用10.6~10.9GB，剩13.6~13.9GB，比原本以為的「換入換出才夠用」寬裕很多。
+- ✅ **場景理解準確**：給真實桌面截圖，正確認出VS Code/AnyDesk/時間等等，沒有幻覈。
+- 🔴 **精確定位（bounding box）不夠準，這是最重要的誠實發現**：要求它定位「Windows開始按鈕」座標，回答格式完全正確（跟藍圖要求的target/bounding_box/confidence/recommended_action一致），但**把座標畫出來，位置偏移了螢幕高度的6~7%，落在開始按鈕上方的空白區域**，而且它給的confidence高達0.98——「自信滿滿地講錯」，這比老實說不確定更危險。用截圖標註紅框直接證明，不是憑感覺判斷（見`progress/p5_vision/evidence/bounding_box_error_evidence.png`）。
+
+**誠實結論**：這是換小模型（省顯示卡記憶體）的合理代價——grounding精確度通常隨模型尺寸下降，不是實作有bug。這個能力目前**不建議直接信任座標去自動點擊**，比較適合用在「粗略判斷畫面上有沒有某種東西」這類不需要精確座標的場合，藍圖本身寫的「Vision Model不直接控制Mouse，Executor再決定是否操作」這個原則要落實得更嚴格——連高confidence都不能直接信。測試用的伺服器已關閉，模型檔案留在`progress/p5_vision/models/`（已加進`.gitignore`，不會被commit進repo）。
+
 ## 設計原則提醒（避免做歪）
 
 - Front Desk 只負責「收斂需求、產生 ORDER.md」，**不負責任何聲學工程判斷**——那是 AERIS 的事，本專案不應該假裝知道 leakage/driver 怎麼分析
