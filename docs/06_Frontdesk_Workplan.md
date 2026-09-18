@@ -366,6 +366,15 @@
 
 **真實測試**：用瀏覽器打字送出「幫我截圖」，用`get_page_text`在回覆逐字浮現的過程中截到一次「還沒跑完」的中間狀態（文字被截斷在還沒跑出完整檔名的地方），等2秒後再讀一次確認完整檔名正確顯示、螢幕截圖檔案真的產生在磁碟上（測試後已清除），瀏覽器console沒有任何錯誤。
 
+## 補測工具執行成功率KPI，過程中抓到一個「執行成功但答案錯」的隱蔽bug
+
+先前`docs/07`盤點提到的「工具執行成功率≥98%」這項KPI，其實在更早的`progress/p4_kpi_measurement/`已經測過（20句涵蓋17個工具，100%），這次要補的是後續新增的4個工具（`task_scheduler_op`/`startup_program_op`/`driver_op`/`photo_edit`）還沒被納入這個樣本。用`progress/p4_kpi_measurement/run_kpi_test_v2_new_tools.py`補測，一樣走真實文字指令->LLM判斷->PolicyEngine->Executor完整流程（L2的兩個工具用`confirm_desktop_command`自動同意，做法跟`test_p3_safety.py`測`close_window`一致）。
+
+- 表面數字：4句全部路由正確、全部執行成功（合併v1後24句100%）
+- 🔴 **但人工檢查每一筆結果內容時，抓到一個「executed=True但答案錯」的隱蔽bug**：測`driver_op`時，「幫我查一下顯示卡驅動版本」正確路由到`driver_op`並執行成功，但LLM填的`keyword`參數是中文「顯示卡」——Windows驅動裝置名稱一律英文，逐字比對對不上，回報「找不到符合『顯示卡』的驅動程式」，但這台機器明明有顯示卡驅動。**「執行成功率」這個KPI衡量的是工具有沒有崩潰，不代表答案語義正確**，這種問題不會被成功率數字抓到。
+- **修法**：`basic_tools.py`的`driver_op()`加一份常見硬體類別中英對照表（顯示卡/網卡/音效/藍芽/觸控/滑鼠/鍵盤/印表機/攝影機），中文關鍵字額外用對應英文詞再比對一次。修好後重測，正確回報「Microsoft Basic Display Driver...、Surface Display Hardware Driver...」。
+- **誠實記錄方法論侵限**：除了這次巡查抓到的案例，目前沒有系統性驗證每個工具「執行成功」時答案內容也語義正確，這是量測方法論本身的侵限，不是已經解決的事。
+
 ## 設計原則提醒（避免做歪）
 
 - Front Desk 只負責「收斂需求、產生 ORDER.md」，**不負責任何聲學工程判斷**——那是 AERIS 的事，本專案不應該假裝知道 leakage/driver 怎麼分析

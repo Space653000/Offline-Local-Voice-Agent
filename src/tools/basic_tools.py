@@ -924,10 +924,30 @@ def startup_program_op(action: str, name: str = None, path: str = None) -> str:
 # L3操作那樣容易復原），config/permissions.yaml把update動作單獨拉高到L3_DANGEROUS，
 # 但目前連update本身都還沒實作，純粹是為未來預留、避免之後真的加上去時忘記標risk level。
 
+# Windows的驅動程式裝置名稱一律是英文（跟系統語系無關），但使用者講中文問「查一下顯示卡
+# 驅動」時，LLM填的keyword參數也會是中文（實測kpi_result_v2_new_tools.json抓到的真實案例：
+# keyword="顯示卡"，逐字比對"Microsoft Basic Display Driver"當然對不上，回報「找不到」——
+# 但顯示卡驅動明明就在清單裡，是關鍵字語言對不上，不是真的沒有）。這裡加一份常見硬體類別的
+# 中英對照，比對時中文關鍵字會額外用對應的英文詞再試一次，不需要使用者自己講英文才查得到。
+_DRIVER_KEYWORD_SYNONYMS = {
+    "顯示卡": ["display", "graphics", "video"], "顯卡": ["display", "graphics", "video"],
+    "網卡": ["network", "ethernet", "wifi", "wireless"], "網路卡": ["network", "ethernet", "wifi", "wireless"],
+    "音效卡": ["audio", "sound"], "音效": ["audio", "sound"], "喇叭": ["audio", "sound"],
+    "藍芽": ["bluetooth"], "藍牙": ["bluetooth"],
+    "觸控": ["touch"], "觸控板": ["touch", "trackpad", "touchpad"],
+    "滑鼠": ["mouse"], "鍵盤": ["keyboard"],
+    "印表機": ["printer"], "掃描器": ["scanner"], "讀卡機": ["card reader"],
+    "攝影機": ["camera", "webcam"], "相機": ["camera", "webcam"],
+}
+
+
 def driver_op(action: str = "list", keyword: str = None) -> str:
     if action != "list":
         raise ValueError(f"driver_op 目前只實作 action=list（查詢，唯讀）；不提供 update，更新驅動風險太高，這個專案不自動做")
     import win32com.client
+    keywords = [keyword] if keyword else []
+    if keyword:
+        keywords += _DRIVER_KEYWORD_SYNONYMS.get(keyword.strip(), [])
     wmi = win32com.client.GetObject("winmgmts:")
     drivers = wmi.ExecQuery("SELECT DeviceName, DriverVersion, Manufacturer FROM Win32_PnPSignedDriver")
     rows = []
@@ -935,7 +955,7 @@ def driver_op(action: str = "list", keyword: str = None) -> str:
         device_name = d.DeviceName or ""
         if not device_name:
             continue
-        if keyword and keyword.lower() not in device_name.lower():
+        if keywords and not any(kw.lower() in device_name.lower() for kw in keywords):
             continue
         rows.append(f"{device_name}（{d.Manufacturer or '未知廠商'}，版本{d.DriverVersion or '未知'}）")
     if not rows:

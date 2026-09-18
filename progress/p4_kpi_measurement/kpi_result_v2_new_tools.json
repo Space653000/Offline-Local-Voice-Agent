@@ -1,0 +1,56 @@
+{
+  "session_id": "kpi-v2-1789703402",
+  "summary": {
+    "n_commands": 4,
+    "tool_routing_accuracy": 1.0,
+    "tool_execution_success_rate": 1.0,
+    "combined_with_v1": {
+      "note": "v1(20句,17工具,2026-09-17) + v2(這4句,4個新工具) 合併起來的整體成功率",
+      "n_total": 24,
+      "executed_total": 24,
+      "success_rate_total": 1.0
+    }
+  },
+  "per_command": [
+    {
+      "text": "列出目前有哪些排程工作",
+      "expected_tool": "task_scheduler_op",
+      "actual_tool": "task_scheduler_op",
+      "tool_match": true,
+      "executed": true,
+      "round_trip_ms": 2405.2,
+      "status": "done",
+      "result_detail": "目前的排程工作：\\AERIS-Local-Company-Watchdog、\\NVIDIA App SelfUpdate_{B2FE1952-0186-46C3-BAEC-A80AA35AC5B8}、\\OneDrive Per-Machine Standalone Update Task、\\OneDrive Reporting Task-S-1-5-21-2361418563-3820771950-458582962-1000、\\OneDrive Startup Task-S-1-5-21-2361418563-3820771950-458582962-1000、\\GoogleUserPEH\\RunPlatformExperienceHelperOnUnlock、\\GoogleUserPEH\\RunPlatformExperienceHelper_Daily、\\GoogleUserPEH\\RunPlatformExperienceHelper_Metrics、\\SoftLanding\\S-1-5-21-2361418563-3820771950-458582962-1000\\SoftLandingCreativeManagementTask、\\SoftLanding\\S-1-5-21-2361418563-3820771950-458582962-1000\\SoftLandingCreativeManagementTask、\\SoftLanding\\S-1-5-21-2361418563-3820771950-458582962-1000\\SoftLandingCreativeManagementTask"
+    },
+    {
+      "text": "看看開機自動啟動有哪些程式",
+      "expected_tool": "startup_program_op",
+      "actual_tool": "startup_program_op",
+      "tool_match": true,
+      "executed": true,
+      "round_trip_ms": 1663.4,
+      "status": "done",
+      "result_detail": "開機自動啟動項目：AnyDesk.exe - 捷徑、Ollama"
+    },
+    {
+      "text": "幫我查一下顯示卡驅動版本",
+      "expected_tool": "driver_op",
+      "actual_tool": "driver_op",
+      "tool_match": true,
+      "executed": true,
+      "round_trip_ms": 4304.3,
+      "status": "done",
+      "result_detail": "Microsoft Basic Display Driver（(Standard display types)，版本10.0.28000.1873）、Surface Display Hardware Driver（Surface，版本3.4.3.0）"
+    },
+    {
+      "text": "把C:\\Users\\testuser\\_va_kpi_test_photo.png轉成灰階",
+      "expected_tool": "photo_edit",
+      "actual_tool": "photo_edit",
+      "tool_match": true,
+      "executed": true,
+      "round_trip_ms": 1293.7,
+      "status": "done",
+      "result_detail": "已完成編輯，另存為 C:\\Users\\testuser\\_va_kpi_test_photo_edited.png"
+    }
+  ]
+}
