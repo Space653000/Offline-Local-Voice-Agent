@@ -14,8 +14,9 @@ import sys, json, requests
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 from executor.executor import Executor, ConfirmationRequired
+from config_loader import load_runtime_config
 
-URL = "http://127.0.0.1:8811/v1/chat/completions"
+URL = load_runtime_config()["llm"]["url"]
 
 # 只列出目前真的有實作的工具，並明確告訴 LLM 每個工具需要什麼參數欄位
 IMPLEMENTED_TOOLS_SPEC = """

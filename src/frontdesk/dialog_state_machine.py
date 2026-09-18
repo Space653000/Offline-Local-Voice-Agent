@@ -13,10 +13,12 @@ from pathlib import Path
 from dataclasses import dataclass, field
 
 sys.path.insert(0, str(Path(__file__).parent))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 from order_writer import OrderDraft, new_case_id, write_order
 from engineers_directory import ENGINEERS, ENGINEER_CAPABILITY
+from config_loader import load_runtime_config
 
-URL = "http://127.0.0.1:8811/v1/chat/completions"
+URL = load_runtime_config()["llm"]["url"]
 
 
 class State(Enum):

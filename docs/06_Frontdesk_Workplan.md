@@ -315,6 +315,17 @@
 
 修好之後重跑全部4個場景＋原本7個既有迴歸測試，全部通過。
 
+## 補上第三份外部化設定：config/runtime.yaml
+
+`docs/08`§5列出「`config/`外部化只做了權限表跟App白名單」是誠實記錄的缺口，這次補上第三份：`config/runtime.yaml`，涵蓋原本散落在`listen_loop.py`/`full_pipeline.py`/`frontdesk/`底下4個檔案裡各自寫死的參數：
+
+- **LLM推論端點URL**：原本`http://127.0.0.1:8811/v1/chat/completions`這串字串在`full_pipeline.py`、`frontdesk/dialog_state_machine.py`、`frontdesk/mode_classifier.py`、`frontdesk/voice_dialog.py`四個檔案各自抄一份，改一個值要記得改四個地方，現在統一從`config/runtime.yaml`讀取。
+- **喚醒詞門檻**（`WAKE_THRESHOLD`）、**端點偵測相關參數**（`END_OF_SPEECH_SILENCE_CHUNKS`等4個）、**緊急停止熱鍵**、**睡眠縫隙偵測門檻**：從`listen_loop.py`裡的常數搬到YAML。
+
+⚠️ **特別澄清一個容易被誤會的地方**：`END_OF_SPEECH_SILENCE_CHUNKS`（連續安靜多少個chunk才算話講完了）就是`docs/08`§4.1「端點偵測延遲的架構取捨」那個SOP項目討論的參數本身。這次外部化**只是把數字從程式碼搬到YAML檔案，數值完全沒有改動**（維持選項A的現狀），不是趁機幫使用者做了選項B的決定——之後使用者真的回覆要選A/B/C時，調整這個參數會變成改一個YAML數字，不用再改程式碼，但「要不要調」跟「調多少」仍然完全等使用者決定。
+
+四個frontdesk相關檔案原本`sys.path`設定不一致（`mode_classifier.py`甚至沒有把`src/`加進path），這次補上`sys.path.insert(0, str(Path(__file__).parent.parent))`讓它們都能匯入`config_loader`。跑完整回歸測試（8個測試檔，含新加的P6場景測試）全部通過，另外單獨驗證3個frontdesk模組能正確匯入並讀到同一個URL值。
+
 ## 設計原則提醒（避免做歪）
 
 - Front Desk 只負責「收斂需求、產生 ORDER.md」，**不負責任何聲學工程判斷**——那是 AERIS 的事，本專案不應該假裝知道 leakage/driver 怎麼分析

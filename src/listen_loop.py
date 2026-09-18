@@ -22,6 +22,9 @@ if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
 
 sys.path.insert(0, str(Path(__file__).parent))
 sys.path.insert(0, str(Path(__file__).parent / "frontdesk"))
+from config_loader import load_runtime_config
+
+_runtime_cfg = load_runtime_config()
 
 ROOT = Path(__file__).parent.parent
 WHISPER_CLI = ROOT / "progress/p0/build/whisper.cpp/build/bin/whisper-cli.exe"
@@ -31,11 +34,13 @@ VAD_ONNX = ROOT / "progress/p1_vad_wakeword/silero_vad.onnx"
 
 CHUNK = 1280  # 80ms @ 16kHz，跟VAD/喚醒詞的streaming介面對齊
 SR = 16000
-WAKE_THRESHOLD = 0.5
-END_OF_SPEECH_SILENCE_CHUNKS = 10  # 連續10個chunk(=0.8秒)偵測不到語音就當作講完了
-MAX_RECORDING_CHUNKS = 150  # 最長錄12秒，避免一直錄下去
-QUIET_CHUNKS_TO_CONFIRM_WAKE_ENDED = 4   # 喚醒後要先連續偵測到這麼多安靜chunk，才算喚醒詞自己的尾音真的講完了
-MAX_WAIT_FOR_QUIET_CHUNKS = 40           # 最多等3.2秒讓喚醒詞尾音安靜下來，避免異常狀況卡死在這個階段
+WAKE_THRESHOLD = _runtime_cfg["wake_word"]["threshold"]
+# 🔴 END_OF_SPEECH_SILENCE_CHUNKS 就是 docs/08 §4.1「端點偵測延遲的架構取捨」討論的那個參數本身，
+# 數值搬到 config/runtime.yaml 了，但維持現狀（選項A），使用者還沒決定選A/B/C前不會自動調整。
+END_OF_SPEECH_SILENCE_CHUNKS = _runtime_cfg["endpoint_detection"]["end_of_speech_silence_chunks"]
+MAX_RECORDING_CHUNKS = _runtime_cfg["endpoint_detection"]["max_recording_chunks"]  # 最長錄12秒，避免一直錄下去
+QUIET_CHUNKS_TO_CONFIRM_WAKE_ENDED = _runtime_cfg["endpoint_detection"]["quiet_chunks_to_confirm_wake_ended"]
+MAX_WAIT_FOR_QUIET_CHUNKS = _runtime_cfg["endpoint_detection"]["max_wait_for_quiet_chunks"]
 # 設計筆記（實測踩過的坑）：一開始用「固定緩衝期跳過0.4秒」想避開喚醒詞自己的尾音殘留，
 # 但實測發現喚醒詞常常在還沒講完就提早觸發（例如「嗨小助理」講到「嗨小」就已經觸發），
 # 觸發後還有將近1.4秒的尾音，固定0.4秒的緩衝期完全不夠，導致尾音的安靜段被誤判成「指令講完了」，
@@ -433,7 +438,7 @@ def run_live(device: int = None):
     loop = ListenLoop(on_event=on_event, chunk_source=q.get)
 
     # ---- 緊急停止熱鍵（P4安全需求，對照 docs/01 第10節：必須是 Ctrl+Shift+F12）----
-    EMERGENCY_HOTKEY = "ctrl+shift+f12"
+    EMERGENCY_HOTKEY = _runtime_cfg["safety"]["emergency_hotkey"]
     stop_flag = {"stop": False}
 
     def emergency_stop():
@@ -457,7 +462,7 @@ def run_live(device: int = None):
 
     # ---- 休眠/闔蓋偵測（P4安全需求）：筆電闔蓋通常會讓系統休眠，音訊串流會中斷一段時間，
     # 用「兩個chunk之間隔太久」間接判斷發生過休眠，避免使用者開蓋當下環境音被誤判成指令 ----
-    SLEEP_GAP_THRESHOLD_SEC = 5.0
+    SLEEP_GAP_THRESHOLD_SEC = _runtime_cfg["safety"]["sleep_gap_threshold_sec"]
     last_chunk_time = [time.time()]
 
     with sd.InputStream(samplerate=SR, channels=1, dtype="int16", blocksize=CHUNK,

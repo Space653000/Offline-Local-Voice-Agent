@@ -14,8 +14,9 @@ sys.path.insert(0, str(Path(__file__).parent))
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from dialog_state_machine import FrontDeskDialog
 from listen_loop import UtteranceRecorder, VADStreamer, VAD_ONNX, run_asr, CHUNK, SR, is_stop_command
+from config_loader import load_runtime_config
 
-LLM_URL = "http://127.0.0.1:8811/v1/chat/completions"
+LLM_URL = load_runtime_config()["llm"]["url"]
 
 
 class StoppedByUser(Exception):

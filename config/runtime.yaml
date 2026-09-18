@@ -1,0 +1,27 @@
+# 語音/LLM管線的可調參數。跟permissions.yaml/tools.yaml不同，這些不是安全關鍵資料，
+# 但一樣外部化出來——原本這些數字散落在 listen_loop.py/full_pipeline.py/frontdesk/*.py
+# 好幾個檔案裡各自寫死（例如同一個LLM URL在4個檔案各抄一份），改一個值要改好幾個地方，
+# 也讓使用者想調整時得去翻程式碼，不是這個專案希望的樣子。
+
+llm:
+  # llama.cpp server的OpenAI相容端點，全專案唯一的LLM推論來源
+  url: "http://127.0.0.1:8811/v1/chat/completions"
+
+wake_word:
+  # openWakeWord預測分數超過這個門檻才算偵測到「嗨小助理」
+  threshold: 0.5
+
+endpoint_detection:
+  # 🔴 對照 docs/08_Executive_Summary_and_User_SOP.md §4.1「端點偵測延遲的架構取捨」——
+  # end_of_speech_silence_chunks 就是那個SOP項目討論的參數本身。這裡外部化只是把數字搬出
+  # 程式碼，並沒有改變數值（維持現狀=選項A），使用者還沒回覆選A/B/C之前，這個值不會被
+  # 自動調整。之後使用者真的決定要調（選項B）時，只要改這個YAML檔案的一個數字，不必再改
+  # listen_loop.py的程式碼——這是這次外部化想達成的效果，不是搶先幫使用者做決定。
+  end_of_speech_silence_chunks: 10  # 連續10個80ms chunk（=0.8秒）偵測不到語音才當作講完了
+  max_recording_chunks: 150         # 最長錄12秒，避免一直錄下去
+  quiet_chunks_to_confirm_wake_ended: 4   # 喚醒後要先連續偵測到這麼多安靜chunk，才算喚醒詞尾音真的講完了
+  max_wait_for_quiet_chunks: 40           # 最多等3.2秒讓喚醒詞尾音安靜下來，避免異常狀況卡死
+
+safety:
+  emergency_hotkey: "ctrl+shift+f12"  # docs/01第10節明訂的緊急停止熱鍵
+  sleep_gap_threshold_sec: 5.0        # 偵測到系統睡眠/喚醒的時間縫隙門檻

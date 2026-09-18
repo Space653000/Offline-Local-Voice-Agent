@@ -6,9 +6,12 @@
 
 用同一個常駐的 llama-server，只是換一個很簡單的 system prompt，不需要另外訓練或換模型。
 """
-import requests, json
+import sys, requests, json
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from config_loader import load_runtime_config
 
-URL = "http://127.0.0.1:8811/v1/chat/completions"
+URL = load_runtime_config()["llm"]["url"]
 
 SYSTEM_PROMPT = (
     "你只做一件事：判斷使用者說的這句話，是「一般電腦操作」還是「聲學/揚聲器/麥克風工程問題」。"
