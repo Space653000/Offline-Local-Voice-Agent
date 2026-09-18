@@ -407,6 +407,16 @@
 
 **真實測試**：對一份本機`.txt`檔案（內容是一句關於顯示卡規格的中文描述）直接呼叫`translate(path=..., target_language='英文')`，輸出「This laptop uses an RTX Spark graphics card, which has a total of 24.5GB of display memory.」，語意跟數字都正確，沒有翻譯錯誤或幻覺。8個回歸測試全部通過。
 
+## 新增「過去的對話」側邊欄（參考雲端AI助理的對話清單）
+
+`conversation_log`這張表本身在更早的階段就已經存在且真的有在寫入資料，但一直沒有任何地方把它讀出來給使用者看——存了資料卻沒有用武之地。這次補上參考ChatGPT/Gemini「左側對話清單」慣例的功能：
+
+- `src/executor/audit_db.py`新增`list_conversation_sessions()`（列出最近的session，附第一句話當摘要、訊息則數、最後活動時間）跟`get_session_messages()`（單一session的完整內容）
+- `console/serve.py`新增`GET /api/history`跟`GET /api/history/<session_id>`兩個端點
+- `companion.html`新增左上角🕘按鈕，點開一個滑入式側邊欄列出過去對話，點其中一則會另外滑出一個唯讀的詳細畫面（重用`chat-log`的聊天泡泡樣式），資料全部是這台機器上真實記錄下來的對話，不是假資料
+
+**真實測試（用瀏覽器直接操作，不是只看程式碼）**：開啟側邊欄看到真實的歷史對話清單（涵蓋這次施工過程中留下的各種真實測試紀錄，時間戳跟訊息則數都正確），點進「幫我讀一下...這份文件並整理重點」這一則，詳細畫面正確顯示當初那次真實互動的完整內容（使用者的請求+真實的摘要回覆）。跑完整回歸測試（8個測試檔）全部通過。
+
 ## 設計原則提醒（避免做歪）
 
 - Front Desk 只負責「收斂需求、產生 ORDER.md」，**不負責任何聲學工程判斷**——那是 AERIS 的事，本專案不應該假裝知道 leakage/driver 怎麼分析

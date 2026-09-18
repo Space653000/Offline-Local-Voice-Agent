@@ -207,6 +207,37 @@ def get_session_context(session_id: str) -> dict:
         return dict(row) if row else None
 
 
+# ---- 對話紀錄瀏覽（參考ChatGPT/Gemini等雲端AI助理「側邊欄看過去對話」的做法，使用者明確
+# 授權「功能可以參考雲端AI，運算留在本機」——conversation_log這張表本身其實在更早的階段
+# 就已經存在且真的有在寫入，只是完全沒有任何地方把它讀出來給使用者看，等於資料存了但沒用。----
+
+def list_conversation_sessions(limit: int = 30) -> list:
+    """
+    列出最近有對話紀錄的session，每個session附上第一句話當摘要（給列表用，不用整段載入）、
+    訊息則數、最後活動時間——同一個session_id可能橫跨很多筆conversation_log記錄。
+    """
+    with get_conn() as conn:
+        conn.row_factory = sqlite3.Row
+        rows = conn.execute(
+            "SELECT session_id, MIN(ts) AS started_ts, MAX(ts) AS last_ts, COUNT(*) AS n_messages, "
+            "(SELECT heard_text FROM conversation_log c2 WHERE c2.session_id = c1.session_id ORDER BY c2.ts LIMIT 1) AS first_message "
+            "FROM conversation_log c1 WHERE session_id IS NOT NULL "
+            "GROUP BY session_id ORDER BY last_ts DESC LIMIT ?",
+            (limit,),
+        ).fetchall()
+        return [dict(row) for row in rows]
+
+
+def get_session_messages(session_id: str) -> list:
+    with get_conn() as conn:
+        conn.row_factory = sqlite3.Row
+        rows = conn.execute(
+            "SELECT ts, heard_text, reply_text FROM conversation_log WHERE session_id=? ORDER BY ts",
+            (session_id,),
+        ).fetchall()
+        return [dict(row) for row in rows]
+
+
 # ---- Memory: User Preferences ----
 
 def set_preference(key: str, value: str):

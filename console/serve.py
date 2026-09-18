@@ -3,6 +3,8 @@
 主控台專用的輕量本機伺服器：
 - 一般路徑 = 靜態檔案（跟原本 python -m http.server 行為一樣）
 - GET /api/orders = 掃描交接資料夾，回傳最近的 ORDER.md 清單（給主控台的「已送出訂單」區塊用）
+- GET /api/history = 列出最近的對話session（參考雲端AI助理的「過去對話」側邊欄，資料來自conversation_log）
+- GET /api/history/<session_id> = 某個session的完整對話內容
 - POST /api/command = 文字輸入指令（companion.html的文字輸入框用，跟語音路徑共用command_processor.py）
 - POST /api/stop = 中斷這個session目前卡住的任務（PlanRunner確認中/FrontDesk問答中），對照語音路徑的「停止」指令
 - POST /api/confirm = 桌面控制L2/L3確認後的文字回覆
@@ -76,6 +78,25 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.send_header("Content-Length", str(len(body)))
             self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            self.wfile.write(body)
+            return
+        if self.path == "/api/history":
+            from executor import audit_db
+            body = json.dumps(audit_db.list_conversation_sessions(), ensure_ascii=False).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+            return
+        if self.path.startswith("/api/history/"):
+            from executor import audit_db
+            session_id = self.path[len("/api/history/"):]
+            body = json.dumps(audit_db.get_session_messages(session_id), ensure_ascii=False).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
             self.end_headers()
             self.wfile.write(body)
             return
