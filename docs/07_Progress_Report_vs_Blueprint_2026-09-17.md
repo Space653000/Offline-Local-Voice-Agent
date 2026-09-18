@@ -613,3 +613,9 @@ policy_rules       -- 權限規則對照表
 - `print_or_scan`：只做print，scan不做（跟record_screen同一類「沒有硬體可以驗證」的情況）。⚠️ **誠實記錄一個沒有完全驗證成功的部分**：這台機器原本沒有設定預設印表機，設定「Microsoft Print to PDF」後重測，`.txt`/`.png`的「列印」verb都沒有真的觸發列印（分別開啟記事本、Windows設定頁面），但`os.startfile`/`win32api.ShellExecute`兩種標準API呼叫方式都回報成功——這是這台機器對「列印」verb的環境限制，不是工具程式碼邏輯的bug，跟`record_screen`（Xbox Game Bar）性質類似，誠實標記成「程式碼邏輯正確、這台機器沒辦法完整驗證」。
 
 跑完整回歸測試（8個測試檔）全部通過。目前35工具表25/35 + 8個UIA原語 = 33個真實工具實作，剩下10個排除工具（`get_weather`/`get_exchange_rate`/`cloud_file_op`/`dev_tool_op`/`email_op`/`video_call_op`/`alarm_op`/`reminder_op`/`calendar_op`/`system_maintenance`）維持排除，理由不變（見第十二次更新）。
+
+### 2026-09-18 第十八次更新：`summarize_doc`補上讀本機檔案能力（.txt/.md/.pdf/.docx），參考雲端AI「上傳檔案問內容」做法
+
+使用者進一步澄清授權範圍：「除了必要的資料以外，能在本地做起來的都不用等我，自己去參考外部雲端服務建立在本地」——這是繼「介面/UX可以參考雲端AI」之後的延伸，明確授權「功能」也可以參考，只要運算換成本機完成。這次據此補上`summarize_doc`直接讀本機檔案的能力（技術細節見`docs/06`「summarize_doc補上讀本機檔案的能力」一節），對應ChatGPT/Gemini「上傳檔案直接問內容」這個功能，差別是檔案解析全部在本機函式庫進行（新裝的`pypdf`/`python-docx`），不會傳到任何外部服務。
+
+支援`.txt`/`.md`/`.pdf`/`.docx`四種格式，`args`向下相容原本的`text`直貼用法。真實測過三種格式（.txt模擬會議紀錄、.docx用python-docx寫的測試報告、.pdf手刻一份有效最小PDF），摘要內容都跟原文語意一致；也走過一次真實NL指令的完整路由測試，正確路由執行。8個回歸測試全部通過。

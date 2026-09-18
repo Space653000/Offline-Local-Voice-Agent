@@ -293,8 +293,38 @@ def translate(text: str, target_language: str = "英文") -> str:
     return _llm_complete(f"把使用者的句子翻譯成{target_language}，只輸出翻譯結果，不要解釋。", text, max_tokens=200)
 
 
-def summarize_doc(text: str) -> str:
-    return _llm_complete("把使用者提供的內容整理成重點摘要，條列3-5點，繁體中文。", text, max_tokens=400)
+# 參考主流雲端AI助理「上傳檔案直接問內容」的做法（使用者明確要求：介面/功能可以參考雲端AI
+# 現有做法，運算本身還是100%在本機完成）——原本summarize_doc只能吃使用者直接貼的文字，
+# 真實文件（報告、會議紀錄）不可能整段用講的或打字貼進來，這裡補上直接讀本機檔案的能力，
+# 不需要使用者自己先把內容複製貼上。支援.txt/.md（純文字）、.pdf（pypdf）、.docx（python-docx），
+# 全部是本機函式庫離線解析，不會把檔案內容傳到任何外部服務。
+
+def _extract_text_from_file(path: Path) -> str:
+    suffix = path.suffix.lower()
+    if suffix in (".txt", ".md"):
+        return path.read_text(encoding="utf-8", errors="ignore")
+    if suffix == ".pdf":
+        import pypdf
+        reader = pypdf.PdfReader(str(path))
+        return "\n".join(page.extract_text() or "" for page in reader.pages)
+    if suffix == ".docx":
+        import docx
+        doc = docx.Document(str(path))
+        return "\n".join(p.text for p in doc.paragraphs)
+    raise ValueError(f"summarize_doc 目前只支援讀取 .txt/.md/.pdf/.docx，不支援：{suffix}")
+
+
+def summarize_doc(text: str = None, path: str = None) -> str:
+    if path:
+        p = _require_safe_path(path, "summarize_doc")
+        if not p.exists():
+            raise ValueError(f"找不到檔案：{p}")
+        text = _extract_text_from_file(p)
+    if not text or not text.strip():
+        raise ValueError("summarize_doc 需要 text 或 path 其中之一，而且內容不能是空的")
+    # 避免超長文件一次全部塞進LLM context拖慢回應，只取前面一段——對「整理重點摘要」這個
+    # 用途來說，一份文件的重點通常前面就會出現，不是為了偷懶省token而武斷砍掉內容
+    return _llm_complete("把使用者提供的內容整理成重點摘要，條列3-5點，繁體中文。", text[:30000], max_tokens=400)
 
 
 # ---- text_input_op：把文字輸入到目前作用中的欄位（使用者自己要確保游標在正確的地方）----

@@ -34,6 +34,7 @@ IMPLEMENTED_TOOLS_SPEC = """
 - text_to_speech_op：把文字唸出來。args: {"text": "要唸的內容"}
 - translate：翻譯句子。args: {"text": "原文", "target_language": "英文"}
 - summarize_doc：整理內容成摘要重點。args: {"text": "要摘要的內容"}
+  或 {"path": "檔案路徑"}（直接讀本機檔案內容來摘要，不用使用者先貼文字；支援.txt/.md/.pdf/.docx）
 - text_input_op：把文字輸入到目前作用中的欄位。args: {"text": "要輸入的內容"}
 - file_op：本機檔案操作。args: {"action": "find", "name": "關鍵字(選填)", "search_dir": "選填，預設家目錄",
   "extension": "選填，例如pdf/txt/jpg", "newest_only": true/false(選填，true時只回傳修改時間最新的一個檔案)}
