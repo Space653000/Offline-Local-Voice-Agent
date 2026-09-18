@@ -246,6 +246,17 @@ class PlanRunner:
                     summary = last.get("result") if last.get("executed") else last.get("reason", str(last))
                     return {"status": "plan_done", "summary": summary, "history": self.history}
                 return {"status": "plan_incomplete", "reason": "規劃者沒有標記完成，也沒有給下一步的工具，先停下來", "history": self.history}
+            # 對照 src/test_plan_runner_scenarios.py 場景4實測抓到的真實bug：LLM有時候不會在
+            # 動作真的都做完之後標記done=true，而是不斷重複呼叫上一步「已經成功執行過、完全
+            # 一樣的tool+args」，導致一路撞到MAX_STEPS才停下來（本來明明1~2步就該結束）。
+            # 這裡加一道跟LLM判斷品質無關的演算法防呆：下一步如果跟history最後一筆完全相同
+            # （同工具、同參數），代表沒有新資訊，直接視為已完成，不要真的再執行一次。
+            if self.history:
+                last_entry = self.history[-1]
+                if decision["tool"] == last_entry["tool"] and decision.get("args", {}) == last_entry["args"]:
+                    last_result = last_entry["result"]
+                    summary = last_result.get("result") if last_result.get("executed") else last_result.get("reason", str(last_result))
+                    return {"status": "plan_done", "summary": summary, "history": self.history}
             try:
                 result = self.ex.run(decision["tool"], decision.get("args", {}), session_id=self.session_id, intent=self.instruction)
             except ConfirmationRequired as e:

@@ -576,3 +576,9 @@ policy_rules       -- 權限規則對照表
 跑完整回歸測試時抓到2個問題：(1) 自己寫的程式碼裡一個raw string轉義反斜線衝突造成`basic_tools.py`整個模組load不起來的語法錯誤，立刻修正；(2) `test_p3_safety.py`測試5的斷言/註解還停留在「`close_window`是L1免確認」的舊假設，跟本報告第2節那次「`close_window`已修正成L2」的記錄不一致——這是先前那次修正留下的技術債（改了程式邏輯、沒同步更新這個測試檔案），這次順手修正。7個回歸測試（`test_l3_confirmation`/`test_listen_loop_simulated`/`test_live_state_writing`/`test_stop_command_simulated`/`test_voice_confirmation`/`test_p3_safety`/`test_p3_volume_clipboard`）修正後全部通過。
 
 **誠實記錄仍然排除的12個工具跟理由，不打算為了衝數字硬做**：`get_weather`/`get_exchange_rate`/`cloud_file_op`需要連網或外部雲端服務，直接違反`CLAUDE.md`「100%離線」的專案核心原則；`dev_tool_op`本質上是「執行任意程式碼」，等同`CLAUDE.md`明文禁止的`execute_any_shell_command`萬用工具模式；`email_op`需要使用者的信箱憑證/OAuth，屬於安全規則「密碼/憑證一律不由我處理」的範圍；`video_call_op`需要特定視訊會議應用程式本身有對外連線能力才有意義，跟`get_weather`同一類；`print_or_scan`需要這台機器實際連接印表機/掃描器硬體，沒有硬體可以驗證就不該宣稱做到；`alarm_op`/`reminder_op`/`calendar_op`原則上可以疊加在`task_scheduler_op`上做出來，但這會是新的複合功能而不是簡單補洞，列為之後可以再擴充的方向，不是這輪的「風險可控、能直接做」候選；`system_maintenance`（清理垃圾檔/安裝更新）跟`git_op`的push/merge一樣，`config/permissions.yaml`本來就把它們標成L3且明確寫「可能不可逆」，這次沒有實作任何實際會執行清理或git操作的程式碼，只是重新確認風險分級沒有錯。
+
+### 2026-09-18 第十三次更新：補齊P6多步驟規劃的場景覆蓋，過程中抓到並修正一個真實的無限重複bug
+
+`docs/08`§5誠實列出「P6目前只驗證過一種場景」是本報告先前記錄過的已知缺口，這次補上正式、可重複執行的迴歸測試`src/test_plan_runner_scenarios.py`，覆蓋4種場景（技術細節見`docs/06`「P6多步驟規劃補測」一節）：①既有的找檔案→開啟→回報場景補成正式測試 ②步驟失敗（找不存在的檔案）後規劃者正確停手，沒有瞎猜路徑硬呼叫open ③單步驟指令不進入多輪迴圈，維持低延遲 ④🔴多步驟規劃中途撞到L2確認，確認後接續執行。
+
+第④個場景第一次跑就抓到一個真實bug，不是為了測試而測試：`create_folder`+`open`兩個動作都已經真的執行成功（資料夾真的建立在磁碟上），但`next_step()`的LLM判斷沒有標記`done=true`，而是不斷重複呼叫同一個已經成功過的`open`（同工具、同參數）——一路撞到`MAX_STEPS=5`才停下來，回報`plan_incomplete`（「沒做完」），跟磁碟上的真實狀態（明明做完了）不一致。修法沒有嘗試靠改善prompt文字去說服LLM「不要重複」，而是在`PlanRunner._continue_loop()`（`src/full_pipeline.py`）加一道演算法防呆：下一步如果跟history最後一筆完全相同，直接視為已完成。這跟本報告第五次更新記錄過的SCHEMA args順序bug是同一種設計哲學的延續——**關鍵可靠性的保證不能只靠改善prompt去賭LLM每次都判斷正確，能用確定性演算法擋住的地方就不要交給機率**。修好後4個場景+原有7個回歸測試全部通過。

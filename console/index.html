@@ -161,11 +161,11 @@ table.dbtable td.field{font-weight:700;font-family:ui-monospace,Menlo,Consolas,m
           <svg class="ring" viewBox="0 0 64 64">
             <circle cx="32" cy="32" r="27" fill="none" stroke="var(--surface-2)" stroke-width="8"/>
             <circle cx="32" cy="32" r="27" fill="none" stroke="var(--accent)" stroke-width="8" stroke-linecap="round"
-              stroke-dasharray="169.6" stroke-dashoffset="102" transform="rotate(-90 32 32)"/>
+              stroke-dasharray="169.6" stroke-dashoffset="95" transform="rotate(-90 32 32)"/>
           </svg>
           <div>
-            <b>73%</b> <span class="label"><span lang-zh>整體工程進度（P0～P6 共 7 大階段）</span><span lang-en>overall build progress (7 phases, P0–P6)</span></span>
-            <div class="progressbar" style="width:220px"><i style="width:73%"></i></div>
+            <b>75%</b> <span class="label"><span lang-zh>整體工程進度（P0～P6 共 7 大階段）</span><span lang-en>overall build progress (7 phases, P0–P6)</span></span>
+            <div class="progressbar" style="width:220px"><i style="width:75%"></i></div>
           </div>
         </div>
         <a href="companion.html" style="text-decoration:none">
@@ -272,8 +272,8 @@ table.dbtable td.field{font-weight:700;font-family:ui-monospace,Menlo,Consolas,m
       <section id="planner">
         <div class="sec-head"><h2><span lang-zh>補上多步驟規劃：一句話可以拆成幾個連續動作了</span><span lang-en>Multi-step planning added: one sentence, several chained actions</span></h2></div>
         <div class="stack">
-          <p lang-zh>藍圖最終驗收要求的例子是「找到Downloads裡最新的PDF，打開它，然後把檔名告訴我」——這種話裡包含三個依序動作，而且第二步（開哪個檔案）要等第一步真的執行完才知道答案，原本的系統只能處理一句話對應一個動作。現在補上了：AI會先判斷這句話是不是需要好幾步，如果是，就一步一步來，每一步都用「上一步真正執行後的結果」決定下一步要做什麼，不是自己憑空亂猜檔名。用真實測試（真的建測試檔案）連續驗證4次都正確：找到真正最新的檔案、用真實路徑打開它、正確講出檔名。單一動作的指令（像「現在幾點」）完全不受影響，一樣快。</p>
-          <p lang-en>The blueprint's final acceptance example is "find the newest PDF in Downloads, open it, then tell me the filename" — three chained actions where step two (which file to open) can't be known until step one has actually run. The system used to handle only one action per sentence. Now it decides upfront whether a sentence needs multiple steps, and if so works through them one at a time, each step using the real result of the previous one rather than guessing a filename out of thin air. Verified correct across 4 real test runs (with real test files): found the genuinely newest file, opened it using the real path, correctly reported the filename. Single-action commands ("what time is it") are unaffected and just as fast.</p>
+          <p lang-zh>藍圖最終驗收要求的例子是「找到Downloads裡最新的PDF，打開它，然後把檔名告訴我」——這種話裡包含三個依序動作，而且第二步（開哪個檔案）要等第一步真的執行完才知道答案，原本的系統只能處理一句話對應一個動作。現在補上了：AI會先判斷這句話是不是需要好幾步，如果是，就一步一步來，每一步都用「上一步真正執行後的結果」決定下一步要做什麼，不是自己憑空亂猜檔名。後來補測4種不同場景（找檔案、步驟失敗時正確停手、單步驟指令維持低延遲、規劃中途撞到需要你確認的敏感操作），第4種第一次跑就抓到一個真實bug：兩個動作明明都已經真的做完了，AI卻不斷重複問最後一步，一路問到上限才停下來、還誤報「沒做完」——已經修好（加一道跟AI判斷品質無關的演算法防呆：發現要重複一模一樣的動作，直接視為完成）。單一動作的指令（像「現在幾點」）完全不受影響，一樣快。</p>
+          <p lang-en>The blueprint's final acceptance example is "find the newest PDF in Downloads, open it, then tell me the filename" — three chained actions where step two (which file to open) can't be known until step one has actually run. The system used to handle only one action per sentence. Now it decides upfront whether a sentence needs multiple steps, and if so works through them one at a time, each step using the real result of the previous one rather than guessing a filename out of thin air. Later added tests for 4 different scenarios (finding a file, gracefully handling a failed step, single-action commands staying fast, and a mid-plan sensitive action needing your confirmation) — the 4th caught a real bug on the first run: both actions had genuinely completed, but the AI kept re-asking for the last step until it hit the retry limit and wrongly reported "not finished." Fixed with an algorithmic safeguard (repeating an identical action now counts as already done) rather than relying on the AI's judgment alone. Single-action commands ("what time is it") are unaffected and just as fast.</p>
         </div>
       </section>
 
@@ -357,8 +357,8 @@ table.dbtable td.field{font-weight:700;font-family:ui-monospace,Menlo,Consolas,m
       </section>
 
       <div style="text-align:center;color:var(--sub);font-size:11.5px;margin-top:30px">
-        <span lang-zh>更新時間 2026-09-18 · P3驗收劇本真的跑通了(記事本開→打字→存檔→關閉→重開，並修正一個先前的環境誤判) · 重新查證record_screen是獨立的環境限制(跟記事本問題不同) · 新增檔案操作/電源控制/錄音轉文字/螢幕錄影/工作排程器/開機啟動項/驅動查詢/圖片編輯/UIA原語(35工具表23/35) · P6補上多步驟規劃 · 補齊記憶/操作紀錄資料表 · 補測4項KPI · 補上UI五態模型 · 新增config/外部化設定 · docs/08總結報告+使用者SOP清單 · 完整技術報告在 progress/ 資料夾跟 docs/07 進度報告</span>
-        <span lang-en>Updated 2026-09-18 · The P3 acceptance script actually passed (Notepad open->type->save->close->reopen, correcting an earlier environment misdiagnosis) · re-verified record_screen as a separate, distinct environment limitation from the Notepad issue · added file ops/power control/audio transcription/screen recording/task scheduler/startup items/driver query/photo editing/UIA primitives (35-tool table now 23/35) · P6 added multi-step planning · completed memory/logging tables · measured 4 KPIs · added the 5-state UI model · externalized config/ settings · docs/08 executive summary + user SOP checklist · full technical reports in the progress/ folder and docs/07</span>
+        <span lang-zh>更新時間 2026-09-18 · P3驗收劇本真的跑通了(記事本開→打字→存檔→關閉→重開，並修正一個先前的環境誤判) · 重新查證record_screen是獨立的環境限制(跟記事本問題不同) · 新增檔案操作/電源控制/錄音轉文字/螢幕錄影/工作排程器/開機啟動項/驅動查詢/圖片編輯/UIA原語(35工具表23/35) · P6補測4種多步驟規劃場景並修正一個真實的無限重複bug · 補齊記憶/操作紀錄資料表 · 補測4項KPI · 補上UI五態模型 · 新增config/外部化設定 · docs/08總結報告+使用者SOP清單 · 完整技術報告在 progress/ 資料夾跟 docs/07 進度報告</span>
+        <span lang-en>Updated 2026-09-18 · The P3 acceptance script actually passed (Notepad open->type->save->close->reopen, correcting an earlier environment misdiagnosis) · re-verified record_screen as a separate, distinct environment limitation from the Notepad issue · added file ops/power control/audio transcription/screen recording/task scheduler/startup items/driver query/photo editing/UIA primitives (35-tool table now 23/35) · P6 tested 4 multi-step planning scenarios and fixed a real infinite-repeat bug · completed memory/logging tables · measured 4 KPIs · added the 5-state UI model · externalized config/ settings · docs/08 executive summary + user SOP checklist · full technical reports in the progress/ folder and docs/07</span>
       </div>
     </main>
 
