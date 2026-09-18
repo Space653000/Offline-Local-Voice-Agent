@@ -73,6 +73,8 @@ TOOL_IMPLEMENTATIONS = {
         message=args.get("message"), path=args.get("path")),
     "print_or_scan": lambda args: basic_tools.print_or_scan(
         _require(args, "action", "print_or_scan"), path=args.get("path")),
+    "memory_op": lambda args: audit_db.memory_op(
+        _require(args, "action", "memory_op"), key=args.get("key"), value=args.get("value")),
 }
 
 

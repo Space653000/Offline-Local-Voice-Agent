@@ -81,6 +81,10 @@ IMPLEMENTED_TOOLS_SPEC = """
   或 {"action": "commit", "repo_path": "repo資料夾路徑", "message": "commit訊息"}
 - print_or_scan：列印檔案到系統目前設定的預設印表機（只做print，不支援scan——需要真實掃描器硬體）。
   args: {"action": "print", "path": "要列印的檔案路徑"}
+- memory_op：記住/查詢/忘記使用者告訴過你的偏好或事實（例如「記住我喜歡簡短的回答」），跨對話持續有效。
+  args: {"action": "remember", "key": "這件事的簡短名稱", "value": "內容"}
+  或 {"action": "recall", "key": "選填，不填就列出全部記住的事情"}
+  或 {"action": "forget", "key": "要忘記的事情名稱"}
 """
 
 TOOL_ENUM = ["open_app", "close_window", "get_datetime",
@@ -92,7 +96,7 @@ TOOL_ENUM = ["open_app", "close_window", "get_datetime",
              "uia_click", "uia_set_text", "uia_select",
              "press_key", "hotkey", "speech_to_text_op", "record_screen",
              "task_scheduler_op", "startup_program_op", "driver_op", "photo_edit",
-             "git_op", "print_or_scan"]
+             "git_op", "print_or_scan", "memory_op"]
 
 SCHEMA = {
     # 注意：「args」故意放在properties/required的最後一個——llama.cpp把JSON Schema轉成GBNF

@@ -62,6 +62,12 @@ tools:
   dev_tool_op: {level: L2_SENSITIVE, note: "執行程式碼本身有風險"}
   git_op: {level: L2_SENSITIVE, note: "push/merge 可能造成程式碼遺失"}
   summarize_doc: {level: L0_READONLY}
+  memory_op:
+    level: L0_READONLY
+    note: >
+      基準是L0（recall是純查詢）；remember/forget會真的改變user_preferences這張表的內容，
+      由escalation_rules個別拉高成L1（routine，容易復原——記錯了再講一次「記住...」蓋過去，
+      或講「忘記...」刪掉就好，不是不可逆的操作，不需要到L2確認）
 
   # 對照 docs/01 藍圖第7節的 UIA 原語（docs/07 進度報告抓到的缺口，這批補上）
   get_active_window: {level: L0_READONLY}
@@ -88,3 +94,5 @@ escalation_rules:
   - {tool: email_op, action: delete, level: L3_DANGEROUS}
   - {tool: email_op, action: send, level: L3_DANGEROUS}
   - {tool: driver_op, action: update, level: L3_DANGEROUS}
+  - {tool: memory_op, action: remember, level: L1_ROUTINE}
+  - {tool: memory_op, action: forget, level: L1_ROUTINE}

@@ -628,3 +628,9 @@ policy_rules       -- 權限規則對照表
 2. 新增「過去的對話」側邊欄——`conversation_log`這張表其實早就存在且真的有在寫資料，但完全沒有地方讀出來給使用者看，這次補上`GET /api/history`/`GET /api/history/<session_id>`跟`companion.html`的側邊欄UI，參考ChatGPT/Gemini的對話清單慣例。用瀏覽器實測過：側邊欄真的列出這次施工過程留下的歷史對話（時間/則數正確），點進去能看到當初真實的請求+回覆內容。
 
 8個回歸測試全部通過。
+
+### 2026-09-18 第二十次更新：新增`memory_op`（記憶功能），抓到並修正一個中文模糊比對的真實bug
+
+延續參考雲端AI助理功能的方向，新增`memory_op`（`remember`/`recall`/`forget`），對照ChatGPT等助理的「記憶」功能——資料完全存在本機sqlite，不傳到外部服務（技術細節見`docs/06`對應章節）。`user_preferences`表跟底層`set_preference()`/`get_preference()`函式其實早就存在，只是跟先前發現的`conversation_log`一樣，完全沒有地方呼叫過。
+
+第一次跑真實NL測試就抓到一個真實bug：LLM兩次生成的free-text `key`用詞不完全一樣（「喜歡簡短回答」vs「喜歡的回答」，差一個「的」字），精確比對/子字串比對都抓不到，導致明明記住過卻回報「沒有記住過」。已修正（改用字元集合Jaccard相似度做模糊比對，設0.4門檻避免誤配）。修好後重測正確配對，同時驗證完全不相關的查詢不會被誤配。8個回歸測試全部通過。

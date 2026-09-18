@@ -253,3 +253,62 @@ def get_preference(key: str, default=None):
     with get_conn() as conn:
         row = conn.execute("SELECT value FROM user_preferences WHERE key=?", (key,)).fetchone()
         return row[0] if row else default
+
+
+def delete_preference(key: str) -> bool:
+    with get_conn() as conn:
+        cur = conn.execute("DELETE FROM user_preferences WHERE key=?", (key,))
+        return cur.rowcount > 0
+
+
+def list_preferences() -> list:
+    with get_conn() as conn:
+        conn.row_factory = sqlite3.Row
+        return [dict(row) for row in conn.execute("SELECT key, value, updated_ts FROM user_preferences ORDER BY key").fetchall()]
+
+
+# ---- memory_op：對外的工具入口（參考雲端AI助理的「記憶」功能，例如ChatGPT會記住使用者
+# 講過的偏好，下次對話還記得）----
+# set_preference/get_preference這兩個函式其實在更早的階段就已經寫好了，但一直沒有任何地方
+# 呼叫過（跟這次盤點之前conversation_log同一種「表跟函式都在，就是沒接上」的落差）。
+# 這裡補上完整對外接口，讓使用者能真的用講的/打字告訴助理「記住我喜歡...」，下次問「我喜歡
+# 什麼」能真的答得出來——資料完全存在這台機器本機的sqlite檔案，不會傳到任何外部服務。
+
+def memory_op(action: str, key: str = None, value: str = None) -> str:
+    if action == "remember":
+        if not key or value is None:
+            raise ValueError("memory_op 的 remember 動作需要 key 跟 value")
+        set_preference(key, value)
+        return f"已記住：{key} = {value}"
+    if action == "recall":
+        if key:
+            v = get_preference(key)
+            if v is not None:
+                return f"{key} = {v}"
+            # LLM每次判斷「這件事的簡短名稱」用的字眼不一定完全一樣（實測真的踩到：remember時
+            # 存的key是「喜歡簡短回答」，下次使用者問「你記得我喜歡的回答方式嗎」，LLM這次填的
+            # key變成「喜歡的回答」——兩者連子字串包含關係都不成立，因為中間多了個「的」字）。
+            # 中文沒有天然的分詞邊界，單純子字串比對太脆弱，改用字元集合的Jaccard相似度當模糊
+            # 比對依據，抓「這兩個詞共用了多少字」而不是要求完全連續一致。
+            key_chars = set(key.strip())
+            best_match, best_score = None, 0.0
+            for p in list_preferences():
+                stored_chars = set(p["key"].strip())
+                if not key_chars or not stored_chars:
+                    continue
+                score = len(key_chars & stored_chars) / len(key_chars | stored_chars)
+                if score > best_score:
+                    best_match, best_score = p, score
+            if best_match and best_score >= 0.4:
+                return f"{best_match['key']} = {best_match['value']}（你問的是「{key}」，找到最接近的記錄）"
+            return f"沒有記住過「{key}」這件事"
+        prefs = list_preferences()
+        if not prefs:
+            return "目前沒有記住任何事情"
+        return "、".join(f"{p['key']}={p['value']}" for p in prefs)
+    if action == "forget":
+        if not key:
+            raise ValueError("memory_op 的 forget 動作需要 key")
+        removed = delete_preference(key)
+        return f"已忘記「{key}」" if removed else f"沒有記住過「{key}」，沒什麼好忘記的"
+    raise ValueError(f"memory_op 不支援的 action：{action}（只接受 remember/recall/forget）")
