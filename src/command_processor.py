@@ -122,6 +122,22 @@ def start_frontdesk_text(text: str, session_id: str) -> dict:
     return {"status": "frontdesk", "session_id": session_id, "step": step}
 
 
+def stop_session(session_id: str) -> dict:
+    """
+    文字/網頁路徑的「停止」——對照 docs/06 抓到的落差：is_stop_command() 原本只接到語音路徑
+    （listen_loop.py/voice_dialog.py），文字路徑完全沒有對應機制，使用者在網頁打「停止」
+    只會被 mode_classifier 誤判成一句普通指令去問LLM，不會真的中斷正在進行中的任務。
+    這裡不需要判斷文字內容是不是「停止」（那是語音路徑要在一堆連續語音裡分辨的問題），
+    網頁前端有專門的停止按鈕，按下去就直接呼叫這裡，把這個session卡住的PlanRunner跟
+    FrontDesk對話都清掉，讓使用者能重新開始，不必等超時。
+    """
+    had_plan = _PLAN_SESSIONS.pop(session_id, None) is not None
+    had_frontdesk = _FRONTDESK_SESSIONS.pop(session_id, None) is not None
+    from executor import audit_db
+    audit_db.log_conversation("（使用者按下停止）", reply_text="已停止目前的任務", session_id=session_id)
+    return {"status": "stopped", "had_active_task": had_plan or had_frontdesk}
+
+
 def continue_frontdesk_text(session_id: str, reply: str) -> dict:
     dlg = _FRONTDESK_SESSIONS.get(session_id)
     if dlg is None:

@@ -64,11 +64,18 @@ h1,h2,h3{font-family:inherit;margin:0;text-wrap:balance}
 .status-text{font-size:22px;font-weight:800;text-align:center;margin-bottom:6px}
 .status-sub{font-size:13.5px;color:var(--sub);text-align:center;margin-bottom:28px}
 
-.transcript-card{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:16px;
-  padding:16px 18px;box-shadow:var(--shadow);margin-bottom:14px;min-height:56px}
-.transcript-card .label{font-size:11px;color:var(--sub);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
-.transcript-card .text{font-size:15px;line-height:1.6}
-.transcript-card.empty .text{color:var(--sub)}
+/* ---- 對話紀錄：參考ChatGPT/Gemini等主流AI助理的聊天泡泡樣式，取代原本只顯示
+   「最後一句」的單張卡片——這是使用者明確要求「介面/UX可以參考現有雲端AI做法」
+   的具體改動，運算本身還是100%在這台機器上跑，只是聊天記錄的呈現方式借鏡現有慣例 ---- */
+.chat-log{width:100%;max-height:38vh;overflow-y:auto;display:flex;flex-direction:column;gap:10px;
+  margin-bottom:14px;padding:4px 4px 4px 0;scroll-behavior:smooth}
+.chat-empty{color:var(--sub);font-size:13.5px;text-align:center;padding:22px 0}
+.msg{max-width:86%;padding:10px 14px;border-radius:16px;font-size:14.5px;line-height:1.55;
+  white-space:pre-wrap;word-break:break-word;box-shadow:var(--shadow)}
+.msg.user{align-self:flex-end;background:var(--accent);color:#fff;border-bottom-right-radius:5px}
+.msg.assistant{align-self:flex-start;background:var(--surface);border:1px solid var(--border);
+  color:var(--ink);border-bottom-left-radius:5px}
+.msg .src{font-size:10.5px;opacity:.6;margin-top:4px}
 
 .try-section{width:100%;margin-top:18px}
 .try-section h3{font-size:13px;color:var(--sub);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px}
@@ -105,6 +112,10 @@ h1,h2,h3{font-family:inherit;margin:0;text-wrap:balance}
   cursor:pointer;background:var(--accent);color:var(--surface)}
 .text-input-row button:disabled{opacity:.5;cursor:default}
 .input-hint{font-size:12px;color:var(--sub);margin-top:6px}
+/* 停止按鈕：參考ChatGPT等助理在AI正在處理/回答時提供的「停止」控制，接到既有的緊急停止/
+   語音停止機制（docs/01第10節），忙碌狀態才顯示，避免平常佔用畫面空間 */
+.stop-btn{border:none;border-radius:12px;padding:0 16px;font-size:14px;font-weight:700;cursor:pointer;
+  background:var(--fail-bg);color:var(--fail);border:1px solid var(--fail)}
 
 .confirm-card{width:100%;background:var(--warn-bg);border:1px solid var(--warn);border-radius:14px;
   padding:14px 16px;margin-top:10px;font-size:14px;line-height:1.6}
@@ -141,13 +152,8 @@ h1,h2,h3{font-family:inherit;margin:0;text-wrap:balance}
   <div class="status-text" id="statusText">待命中</div>
   <div class="status-sub" id="statusSub">說「嗨小助理」開始</div>
 
-  <div class="transcript-card empty" id="transcriptCard">
-    <div class="label">你剛剛說</div>
-    <div class="text" id="transcriptText">（還沒有講話）</div>
-  </div>
-  <div class="transcript-card empty" id="responseCard">
-    <div class="label">助理回覆</div>
-    <div class="text" id="responseText">（還沒有回覆）</div>
+  <div class="chat-log" id="chatLog">
+    <div class="chat-empty">還沒有對話紀錄——用講的或打字都可以開始</div>
   </div>
 
   <div id="notRunningNotice" class="not-running-card" hidden>
@@ -159,6 +165,7 @@ h1,h2,h3{font-family:inherit;margin:0;text-wrap:balance}
 
   <div class="text-input-row">
     <input type="text" id="textInput" placeholder="不方便講話？也可以打字，例如：現在幾點" autocomplete="off">
+    <button id="stopBtn" class="stop-btn" hidden>■ 停止</button>
     <button id="sendBtn">傳送</button>
   </div>
   <div class="input-hint">語音跟文字都可以用，兩種方式效果一樣</div>
@@ -273,11 +280,36 @@ h1,h2,h3{font-family:inherit;margin:0;text-wrap:balance}
   var orbIcon = document.getElementById('orbIcon');
   var statusText = document.getElementById('statusText');
   var statusSub = document.getElementById('statusSub');
-  var transcriptText = document.getElementById('transcriptText');
-  var transcriptCard = document.getElementById('transcriptCard');
-  var responseText = document.getElementById('responseText');
-  var responseCard = document.getElementById('responseCard');
   var notRunningNotice = document.getElementById('notRunningNotice');
+  var chatLog = document.getElementById('chatLog');
+  var stopBtn = document.getElementById('stopBtn');
+
+  // ---- 對話紀錄（chat-log）：語音跟文字兩種輸入路徑最後都會匯進同一份聊天記錄，
+  // 不是分開顯示——這樣使用者不管用講的還是打字，都能在同一條時間軸上看到完整對話，
+  // 這是參考ChatGPT/Gemini等助理「統一對話記錄」慣例的具體改動 ----
+  function addMessage(role, text, source){
+    if (!text) return;
+    var emptyNote = chatLog.querySelector('.chat-empty');
+    if (emptyNote) emptyNote.remove();
+    var div = document.createElement('div');
+    div.className = 'msg ' + role;
+    div.textContent = text;
+    if (source) {
+      var src = document.createElement('div');
+      src.className = 'src';
+      src.textContent = source;
+      div.appendChild(src);
+    }
+    chatLog.appendChild(div);
+    chatLog.scrollTop = chatLog.scrollHeight;
+  }
+
+  // 語音那邊透過 live_state.json 輪詢拿到的 transcript/response 是「目前這輪的值」，
+  // 同一輪會被重複輪詢到很多次（每500ms一次），用值比對而不是每次輪詢都加一筆，
+  // 避免同一句話在聊天記錄裡重複出現好幾十次。
+  var lastVoiceTranscript = '';
+  var lastVoiceResponse = '';
+  var BUSY_STATES = ['wake_detected', 'listening_command', 'thinking', 'executing', 'waiting_confirmation', 'speaking', 'front_desk'];
 
   function applyState(data){
     var status = data.status || 'idle';
@@ -291,15 +323,16 @@ h1,h2,h3{font-family:inherit;margin:0;text-wrap:balance}
       statusSub.textContent = data.message || '';
     }
 
-    if (data.transcript) {
-      transcriptText.textContent = data.transcript;
-      transcriptCard.classList.remove('empty');
+    if (data.transcript && data.transcript !== lastVoiceTranscript) {
+      lastVoiceTranscript = data.transcript;
+      addMessage('user', data.transcript, '🎙️ 語音');
     }
-    if (data.response) {
-      responseText.textContent = data.response;
-      responseCard.classList.remove('empty');
+    if (data.response && data.response !== lastVoiceResponse) {
+      lastVoiceResponse = data.response;
+      addMessage('assistant', data.response);
     }
     notRunningNotice.hidden = status !== 'not_running';
+    stopBtn.hidden = BUSY_STATES.indexOf(status) === -1;
   }
 
   function poll(){
@@ -320,14 +353,21 @@ h1,h2,h3{font-family:inherit;margin:0;text-wrap:balance}
   var frontdeskCard = document.getElementById('frontdeskCard');
   var frontdeskActive = false;
 
-  function showTranscript(text){
-    transcriptText.textContent = text;
-    transcriptCard.classList.remove('empty');
-  }
-  function showResponse(text){
-    responseText.textContent = text;
-    responseCard.classList.remove('empty');
-  }
+  function showTranscript(text){ addMessage('user', text, '⌨️ 文字'); }
+  function showResponse(text){ addMessage('assistant', text); }
+
+  stopBtn.addEventListener('click', function(){
+    stopBtn.disabled = true;
+    fetch('/api/stop', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({session_id: sessionId}),
+    }).then(function(r){ return r.json(); }).then(function(){
+      frontdeskActive = false;
+      confirmCard.hidden = true;
+      frontdeskCard.hidden = true;
+      showResponse('（已停止目前的任務）');
+    }).finally(function(){ stopBtn.disabled = false; });
+  });
 
   function renderConfirm(call, reason, level, requiresTyped){
     frontdeskCard.hidden = true;
@@ -376,7 +416,8 @@ h1,h2,h3{font-family:inherit;margin:0;text-wrap:balance}
 
   function handleResult(result){
     if (result.status === 'done') {
-      showResponse(JSON.stringify(result.result, null, 0));
+      var r = result.result || {};
+      showResponse(r.executed === false ? (r.reason || '沒有執行') : (r.result != null ? String(r.result) : '完成了'));
     } else if (result.status === 'needs_confirmation') {
       renderConfirm(result.call, result.reason, result.level, result.requires_typed_confirmation);
     } else if (result.status === 'frontdesk') {

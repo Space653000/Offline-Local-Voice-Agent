@@ -4,6 +4,7 @@
 - 一般路徑 = 靜態檔案（跟原本 python -m http.server 行為一樣）
 - GET /api/orders = 掃描交接資料夾，回傳最近的 ORDER.md 清單（給主控台的「已送出訂單」區塊用）
 - POST /api/command = 文字輸入指令（companion.html的文字輸入框用，跟語音路徑共用command_processor.py）
+- POST /api/stop = 中斷這個session目前卡住的任務（PlanRunner確認中/FrontDesk問答中），對照語音路徑的「停止」指令
 - POST /api/confirm = 桌面控制L2/L3確認後的文字回覆
 - POST /api/frontdesk_reply = Front Desk文字問答下一輪回覆
 
@@ -94,12 +95,17 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_POST(self):
-        from command_processor import process_text, confirm_desktop_command, continue_frontdesk_text
+        from command_processor import process_text, confirm_desktop_command, continue_frontdesk_text, stop_session
 
         try:
             if self.path == "/api/command":
                 data = self._read_json_body()
                 result = process_text(data["text"], data.get("session_id", "default"))
+                self._send_json(result)
+                return
+            if self.path == "/api/stop":
+                data = self._read_json_body()
+                result = stop_session(data.get("session_id", "default"))
                 self._send_json(result)
                 return
             if self.path == "/api/confirm":
