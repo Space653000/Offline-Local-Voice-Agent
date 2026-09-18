@@ -1,22 +1,22 @@
 {
   "raw_timestamps_unix": {
-    "wake_detected": 1789658880.8994532,
-    "utterance_end": 1789658884.7986157,
-    "asr_result": 1789658886.3237307,
+    "wake_detected": 1789719381.5595164,
+    "utterance_end": 1789719385.4444852,
+    "asr_result": 1789719387.2381008,
     "asr_result_text": "現在幾點",
-    "executing": 1789658886.5541308,
-    "action_result": 1789658887.012914,
-    "action_summary": "現在是 2026-09-17 23:28:06，星期四"
+    "executing": 1789719387.5070772,
+    "action_result": 1789719388.0208037,
+    "action_summary": "現在是 2026-09-18 16:16:28，星期五"
   },
   "asr_text": "現在幾點",
-  "action_summary": "現在是 2026-09-17 23:28:06，星期四",
-  "wake_to_asr_ms": 5424.3,
+  "action_summary": "現在是 2026-09-18 16:16:28，星期五",
+  "wake_to_asr_ms": 5678.6,
   "wake_to_asr_target_ms": 1500,
   "wake_to_asr_pass": false,
-  "asr_result_to_executing_ms": 230.4,
-  "executing_to_done_ms": 458.8,
+  "asr_result_to_executing_ms": 269.0,
+  "executing_to_done_ms": 513.7,
   "note_tool_start": "此架構Executor.run()是同步呼叫，決策完成即刻執行，沒有額外派工延遲；executing_to_done_ms包含LLM決策+實際執行兩段",
-  "wake_to_done_ms": 6113.5,
+  "wake_to_done_ms": 6461.3,
   "wake_to_done_target_ms": 3000,
   "wake_to_done_pass": false
 }

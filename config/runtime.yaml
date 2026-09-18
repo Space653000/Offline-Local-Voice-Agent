@@ -12,14 +12,19 @@ wake_word:
   threshold: 0.5
 
 endpoint_detection:
-  # 🔴 對照 docs/08_Executive_Summary_and_User_SOP.md §4.1「端點偵測延遲的架構取捨」——
-  # end_of_speech_silence_chunks 就是那個SOP項目討論的參數本身。這裡外部化只是把數字搬出
-  # 程式碼，並沒有改變數值（維持現狀=選項A），使用者還沒回覆選A/B/C之前，這個值不會被
-  # 自動調整。之後使用者真的決定要調（選項B）時，只要改這個YAML檔案的一個數字，不必再改
-  # listen_loop.py的程式碼——這是這次外部化想達成的效果，不是搶先幫使用者做決定。
-  end_of_speech_silence_chunks: 10  # 連續10個80ms chunk（=0.8秒）偵測不到語音才當作講完了
+  # 🔴 對照 docs/08_Executive_Summary_and_User_SOP.md §4.1「端點偵測延遲的架構取捨」。
+  # 2026-09-18使用者已回覆選項B（縮短等待），並提到「其他雲端AI都預設1秒」當參考基準。
+  # 這裡把兩段安全邊際各縮短：
+  #   end_of_speech_silence_chunks: 10(0.8秒) -> 6(0.48秒)
+  #   quiet_chunks_to_confirm_wake_ended: 4(0.32秒) -> 3(0.24秒)
+  # 兩段加總從原本1.12秒降到0.72秒，縮短約0.4秒——刻意不是砍到接近0（P1階段已經踩過坑：
+  # 緩衝期太短會把使用者話還沒講完就誤判成講完，把話切斷），是折衷後的中等幅度調整。
+  # 純ASR轉錄本身還要約1.5秒，物理上很難把整體壓到1秒，這裡只縮短「確認你講完了」這段
+  # 安全邊際能縮的部分。調整後有沒有真的變快、有沒有增加誤切話尾的風險，都要用
+  # progress/p4_kpi_measurement/run_voice_latency_test.py重新實測驗證，不能只憑理論估計。
+  end_of_speech_silence_chunks: 6   # 連續6個80ms chunk（=0.48秒）偵測不到語音才當作講完了
   max_recording_chunks: 150         # 最長錄12秒，避免一直錄下去
-  quiet_chunks_to_confirm_wake_ended: 4   # 喚醒後要先連續偵測到這麼多安靜chunk，才算喚醒詞尾音真的講完了
+  quiet_chunks_to_confirm_wake_ended: 3   # 喚醒後要先連續偵測到這麼多安靜chunk，才算喚醒詞尾音真的講完了
   max_wait_for_quiet_chunks: 40           # 最多等3.2秒讓喚醒詞尾音安靜下來，避免異常狀況卡死
 
 safety:
