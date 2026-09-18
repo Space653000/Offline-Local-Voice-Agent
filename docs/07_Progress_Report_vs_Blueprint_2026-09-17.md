@@ -604,3 +604,12 @@ policy_rules       -- 權限規則對照表
 延續參考雲端AI助理UX的方向，`companion.html`補上思考中動態提示（三點跳動）跟助理文字回覆逐字浮現效果（技術細節見`docs/06`「companion.html介面改版第二輪」一節），修正過程中順手抓到並修正一個競態問題（文字請求進行中時，語音狀態輪詢不該插手關掉打字動畫）。
 
 另外補測了「工具執行成功率≥98%」這項KPI裡還沒涵蓋的部分——原本`progress/p4_kpi_measurement/`那批20句樣本是2026-09-17測的，只涵蓋當時的17個工具，這次補測後續新增的`task_scheduler_op`/`startup_program_op`/`driver_op`/`photo_edit`（技術細節見`docs/06`「補測工具執行成功率KPI」一節、`progress/p4_kpi_measurement/REPORT.md`）。表面數字4句全部路由正確、全部執行成功，但🔴**人工檢查每筆結果內容時抓到一個「執行成功但答案語義錯誤」的隱蔽bug**：`driver_op`被使用者用中文問「顯示卡驅動」，LLM填的keyword參數也是中文，但Windows驅動裝置名稱一律英文，逐字比對對不上，回報「找不到」——但這台機器明明有顯示卡驅動，只是關鍵字語言不對。已修正（加中英對照表）。這次發現印證一個方法論限制：**「工具執行成功率」這個KPI衡量的是工具有沒有崩潰，不代表答案語義正確**，目前沒有系統性驗證這件事，誠實記錄成方法論本身的侵限，不當作已經解決。
+
+### 2026-09-18 第十七次更新：重新檢視剩下12個排除工具，補實作`git_op`/`print_or_scan`（23/35 → 25/35）
+
+使用者明確指示「不要再問我，持續朝藍圖施工到本地」，這次再重新檢視第十二次更新記錄的「12個仍排除工具」，抓到2個之前判斷過於保守、其實可以在完全離線前提下實作的（技術細節見`docs/06`「P3工具擴充第七批」一節）：
+
+- `git_op`：只做本機動作（status/log/diff/add/commit），push/merge刻意不實作——`config/permissions.yaml`早在更早階段就把這兩個動作預留成L3，這次只是把函式補上，權限表不用改。真實測過對這個repo跑status/log/diff、對一個scratch測試repo跑add+commit（測試完已清除），也走過一次真實LLM文字路由。
+- `print_or_scan`：只做print，scan不做（跟record_screen同一類「沒有硬體可以驗證」的情況）。⚠️ **誠實記錄一個沒有完全驗證成功的部分**：這台機器原本沒有設定預設印表機，設定「Microsoft Print to PDF」後重測，`.txt`/`.png`的「列印」verb都沒有真的觸發列印（分別開啟記事本、Windows設定頁面），但`os.startfile`/`win32api.ShellExecute`兩種標準API呼叫方式都回報成功——這是這台機器對「列印」verb的環境限制，不是工具程式碼邏輯的bug，跟`record_screen`（Xbox Game Bar）性質類似，誠實標記成「程式碼邏輯正確、這台機器沒辦法完整驗證」。
+
+跑完整回歸測試（8個測試檔）全部通過。目前35工具表25/35 + 8個UIA原語 = 33個真實工具實作，剩下10個排除工具（`get_weather`/`get_exchange_rate`/`cloud_file_op`/`dev_tool_op`/`email_op`/`video_call_op`/`alarm_op`/`reminder_op`/`calendar_op`/`system_maintenance`）維持排除，理由不變（見第十二次更新）。

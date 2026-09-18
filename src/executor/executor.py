@@ -67,6 +67,11 @@ TOOL_IMPLEMENTATIONS = {
     "photo_edit": lambda args: basic_tools.photo_edit(
         _require(args, "path", "photo_edit"), _require(args, "action", "photo_edit"),
         **{k: v for k, v in args.items() if k not in ("path", "action")}),
+    "git_op": lambda args: basic_tools.git_op(
+        _require(args, "action", "git_op"), repo_path=args.get("repo_path"),
+        message=args.get("message"), path=args.get("path")),
+    "print_or_scan": lambda args: basic_tools.print_or_scan(
+        _require(args, "action", "print_or_scan"), path=args.get("path")),
 }
 
 

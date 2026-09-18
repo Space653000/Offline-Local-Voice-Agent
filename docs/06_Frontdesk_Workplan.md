@@ -375,6 +375,16 @@
 - **修法**：`basic_tools.py`的`driver_op()`加一份常見硬體類別中英對照表（顯示卡/網卡/音效/藍芽/觸控/滑鼠/鍵盤/印表機/攝影機），中文關鍵字額外用對應英文詞再比對一次。修好後重測，正確回報「Microsoft Basic Display Driver...、Surface Display Hardware Driver...」。
 - **誠實記錄方法論侵限**：除了這次巡查抓到的案例，目前沒有系統性驗證每個工具「執行成功」時答案內容也語義正確，這是量測方法論本身的侵限，不是已經解決的事。
 
+## P3工具擴充第七批：git_op / print_or_scan（23/35 → 25/35）
+
+使用者要求「不要再問我，持續朝藍圖施工」，這次再重新檢視剩下12個排除工具，抓到2個之前判斷過於保守的：
+
+- **`git_op`**：只實作`status`/`log`/`diff`（純查詢）跟`add`/`commit`（只影響本機repo）。`push`/`merge`刻意不實作——牽涉遠端連線且可能造成真正的程式碼遺失，`config/permissions.yaml`其實早在更早的階段就已經把這兩個動作預留成L3（`escalation_rules`裡本來就有`git_op push/merge → L3_DANGEROUS`），這次只是把函式真正實作出來，權限表不用改。實測：直接對這個真實repo跑`status`/`log`/`diff`（拿到真實的commit歷史、真實的未commit變更清單），另外對一個全新的scratch測試repo跑`add`+`commit`，確認檔案真的被commit進git歷史（測試完已清除）。也用真實文字指令走完整LLM路由測過一次「幫我看一下這個git專案有哪些檔案還沒commit」，正確路由到`git_op(action=status)`並執行成功。
+- **`print_or_scan`**：只實作`print`（用Windows標準的`os.startfile(path, "print")`列印verb，送到系統目前設定的預設印表機）。`scan`不實作——需要真實掃描器硬體才能驗證，跟`record_screen`（Xbox Game Bar）同一類「沒有硬體可以驗證，不該空口宣稱做到」的情況。
+  - ⚠️ **誠實記錄一個沒有完全驗證成功的部分**：實測時發現這台機器原本完全沒有設定預設印表機（`Get-Printer`查不到任何`Default=True`），設定「Microsoft Print to PDF」當預設印表機之後重測，`.txt`跟`.png`檔案的「列印」verb在這台機器上**都沒有真的觸發列印/產生PDF**，而是分別開啟了記事本、Windows設定頁面——API呼叫本身沒有丟例外（`ShellExecute`回傳碼42代表成功），但看不到印表機佇列裡有任何工作、也沒有PDF檔案產生。這跟`docs/07`記錄過的現代記事本應用程式對某些標準Windows API反應異常是同一類環境限制的延伸（這次是「列印」verb，不是鍵盤快捷鍵），不是`print_or_scan()`程式碼邏輯本身的bug——API呼叫方式（`os.startfile`跟`win32api.ShellExecute`兩種都試過，結果一樣）都是標準做法。在能正常處理列印verb的機器上，這個工具應該能正常運作，但這次沒辦法在這台機器上拿到完整的端到端驗證證據，誠實標記成「程式碼邏輯正確、這台機器的環境限制沒辦法完整驗證」，不是「已驗證完全能用」。
+
+跑完整回歸測試（8個測試檔）全部通過。
+
 ## 設計原則提醒（避免做歪）
 
 - Front Desk 只負責「收斂需求、產生 ORDER.md」，**不負責任何聲學工程判斷**——那是 AERIS 的事，本專案不應該假裝知道 leakage/driver 怎麼分析

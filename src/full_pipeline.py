@@ -73,6 +73,12 @@ IMPLEMENTED_TOOLS_SPEC = """
   或 {"path": "圖片路徑", "action": "crop", "box": [左,上,右,下]}
   或 {"path": "圖片路徑", "action": "grayscale"}
   或 {"path": "圖片路徑", "action": "flip_horizontal"|"flip_vertical"}
+- git_op：本機git版本控制（只做本機動作，不支援push/merge——牽涉遠端、風險太高）。
+  args: {"action": "status"|"log"|"diff", "repo_path": "repo資料夾路徑"}
+  或 {"action": "add", "repo_path": "repo資料夾路徑", "path": "選填，預設是全部(.)"}
+  或 {"action": "commit", "repo_path": "repo資料夾路徑", "message": "commit訊息"}
+- print_or_scan：列印檔案到系統目前設定的預設印表機（只做print，不支援scan——需要真實掃描器硬體）。
+  args: {"action": "print", "path": "要列印的檔案路徑"}
 """
 
 TOOL_ENUM = ["open_app", "close_window", "get_datetime",
@@ -83,7 +89,8 @@ TOOL_ENUM = ["open_app", "close_window", "get_datetime",
              "get_active_window", "list_windows", "focus_window",
              "uia_click", "uia_set_text", "uia_select",
              "press_key", "hotkey", "speech_to_text_op", "record_screen",
-             "task_scheduler_op", "startup_program_op", "driver_op", "photo_edit"]
+             "task_scheduler_op", "startup_program_op", "driver_op", "photo_edit",
+             "git_op", "print_or_scan"]
 
 SCHEMA = {
     # 注意：「args」故意放在properties/required的最後一個——llama.cpp把JSON Schema轉成GBNF

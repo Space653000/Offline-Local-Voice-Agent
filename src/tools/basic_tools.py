@@ -1001,3 +1001,67 @@ def photo_edit(path: str, action: str, **kwargs) -> str:
     out_path = p.with_stem(p.stem + "_edited")
     img.save(out_path)
     return f"已完成編輯，另存為 {out_path}"
+
+
+# ---- git_op：本機git版本控制操作（重新檢視docs/08原本排除的12個工具後，發現這個判斷是錯的）----
+# 先前排除理由是「push/merge可能造成程式碼遺失」，但那只是git_op眾多動作裡風險最高的兩個，
+# `config/permissions.yaml`裡其實早就把push/merge個別標成L3、其餘動作留在L2——這張表
+# 在更早的階段就已經預留好分級，只是一直沒有真的把函式實作出來。status/log/diff是純查詢，
+# add/commit只影響本機repo（本身可用git revert/reset復原），都不需要碰網路，完全符合離線原則。
+# push/merge需要遠端連線+可能造成真正的程式碼遺失，這裡刻意不實作（保持風險最高的部分留白），
+# 跟driver_op的update、record_screen以外的部分是同一種「先做安全的部分，危險的部分先不做」原則。
+
+def _resolve_git_repo(repo_path: str):
+    repo = _resolve_under_home(repo_path) if repo_path else None
+    if repo is None or not repo.exists():
+        raise ValueError(f"git_op 需要一個真實存在的repo_path：{repo_path}")
+    if not (repo / ".git").exists():
+        raise ValueError(f"{repo} 不是一個git repo（找不到.git目錄）")
+    return repo
+
+
+def git_op(action: str, repo_path: str = None, message: str = None, path: str = None) -> str:
+    import subprocess
+    repo = _resolve_git_repo(repo_path)
+    handlers = {
+        "status": lambda: ["git", "-C", str(repo), "status", "--short", "--branch"],
+        "log": lambda: ["git", "-C", str(repo), "log", "--oneline", "-n", "10"],
+        "diff": lambda: ["git", "-C", str(repo), "diff", "--stat"],
+        "add": lambda: ["git", "-C", str(repo), "add", path or "."],
+        "commit": lambda: (
+            ["git", "-C", str(repo), "commit", "-m", message]
+            if message else (_ for _ in ()).throw(ValueError("git_op 的 commit 動作需要 message"))
+        ),
+    }
+    if action not in handlers:
+        raise ValueError(f"git_op 不支援的 action：{action}（只接受 status/log/diff/add/commit；push/merge風險太高，這個專案不自動做）")
+    result = subprocess.run(handlers[action](), capture_output=True, text=True, encoding="utf-8", errors="ignore")
+    if result.returncode != 0:
+        raise RuntimeError(f"git {action} 失敗：{result.stderr.strip() or result.stdout.strip()}")
+    output = result.stdout.strip()
+    if action == "status":
+        return output if output else "工作目錄是乾淨的，沒有未commit的變更"
+    if action == "log":
+        return output if output else "這個repo還沒有任何commit"
+    if action == "diff":
+        return output if output else "沒有偵測到差異（stat為空）"
+    if action == "add":
+        return f"已加入待commit清單：{path or '.'}"
+    return f"已commit：{output}"
+
+
+# ---- print_or_scan：本機列印（只實作print，不實作scan）----
+# scan需要這台機器實際接掃描器硬體才能驗證，跟record_screen（Xbox Game Bar）同一類「沒有
+# 硬體/背景服務可以驗證，不該空口宣稱做到」的情況，這裡不實作、誠實留白。print不需要——
+# Windows標準的「列印」右鍵動作（ShellExecute的print verb）送到系統設定的預設印表機，
+# 沒有印表機時系統本身就會用標準對話框告知「找不到印表機」，不需要我們自己額外處理這個狀況。
+
+def print_or_scan(action: str, path: str = None) -> str:
+    if action != "print":
+        raise ValueError(f"print_or_scan 目前只實作 action=print；scan需要真實掃描器硬體才能驗證，這個環境沒有可測，暫不實作")
+    import os
+    p = _require_safe_path(path, "print_or_scan")
+    if not p.exists():
+        raise ValueError(f"找不到要列印的檔案：{p}")
+    os.startfile(str(p), "print")
+    return f"已送出列印：{p}（送到系統目前設定的預設印表機）"
