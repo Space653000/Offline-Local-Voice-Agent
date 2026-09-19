@@ -1,6 +1,10 @@
 # 離線語音桌面代理人 — Claude Code 執行藍圖 v0.1
 （目標硬體：Microsoft Surface Laptop Ultra, RTX Spark, 64GB 統一記憶體, Windows on ARM）
 
+> 📊 **目前施工進度**：本檔案是正式採用的執行規格（一切施工以此為準），內容本身不隨施工進度改動。
+> 想看「現在做到哪」，請看 `docs/08_Executive_Summary_and_User_SOP.md`（一頁式總覽，目前約84%）
+> 或逐次更新的 `docs/07_Progress_Report_vs_Blueprint_2026-09-17.md`（完整技術稽核紀錄）。
+
 > 本藍圖是對照你上傳的 `Offline_Local_Voice_Desktop_Agent_Blueprint_v0.1.md` 與 ChatGPT 深度研究報告後，
 > 針對「RTX Spark 是 ARM 架構」這個關鍵事實重新調整的執行順序。核心哲學不變（API first / UI Automation second / Vision last，離線優先，Tool化，權限分級），
 > 但把「Phase 0 硬體與生態驗證」拉到最優先，因為 ARM Windows 上的 CUDA/PyTorch/llama.cpp 生態目前仍不成熟，這點比模型選擇更決定成敗。
