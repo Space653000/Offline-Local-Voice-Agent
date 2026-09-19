@@ -1,0 +1,24 @@
+0.00.094.728 I cmn  common_param: common_params_print_info: verbosity = 3 (adjust with the `-lv N` CLI arg)
+0.00.094.968 W srv  llama_server: -----------------
+0.00.094.971 W srv  llama_server: CORS is set to allow all origins ('*') and no API key is set
+0.00.094.971 W srv  llama_server: this can be a security risk (cross-origin attacks)
+0.00.094.971 W srv  llama_server: more info: https://github.com/ggml-org/llama.cpp/pull/25655
+0.00.094.972 W srv  llama_server: -----------------
+0.00.102.415 I srv    load_model: loading model 'progress/p5_vision/models/Qwen3VL-30B-A3B-Instruct-Q4_K_M.gguf'
+0.00.533.058 W load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+0.23.676.115 I cmn          init: llama threadpool init, n_threads = 20
+0.23.805.668 W load_hparams: Qwen-VL models require at minimum 1024 image tokens to function correctly on grounding tasks
+0.23.805.673 W load_hparams: if you encounter problems with accuracy, try adding --image-min-tokens 1024
+0.23.805.674 W load_hparams: more info: https://github.com/ggml-org/llama.cpp/issues/16842
+
+0.27.724.002 I srv    load_model: loaded multimodal model, 'progress/p5_vision/models/mmproj-Qwen3VL-30B-A3B-Instruct-Q8_0.gguf'
+0.27.783.831 I srv    load_model: initializing, n_slots = 4, n_ctx_slot = 4096, kv_unified = 'true'
+0.27.808.862 I srv  llama_server: model loaded
+0.27.809.021 I srv  llama_server: listening on http://127.0.0.1:8812
+0.57.116.938 I slot get_availabl: id  3 | task -1 | selected slot by LRU, t_last = -1
+0.57.117.144 I slot launch_slot_: id  3 | task 0 | processing task, is_child = 0
+1.01.239.635 I slot print_timing: id  3 | task 0 | prompt eval time =    3366.45 ms /  2137 tokens (    1.58 ms per token,   634.79 tokens per second)
+1.01.239.644 I slot print_timing: id  3 | task 0 |        eval time =     755.72 ms /    51 tokens (   15.11 ms per token,    66.16 tokens per second)
+1.01.239.645 I slot print_timing: id  3 | task 0 |       total time =    4122.17 ms /  2188 tokens
+1.01.239.646 I slot print_timing: id  3 | task 0 |    graphs reused =         50
+1.01.239.721 I slot      release: id  3 | task 0 | stop processing: n_tokens = 2187, truncated = 0

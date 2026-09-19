@@ -1,0 +1,32 @@
+{
+  "stage1_rough_box": [
+    0,
+    937,
+    120,
+    987
+  ],
+  "crop_region_with_padding": [
+    0,
+    787,
+    270,
+    1080
+  ],
+  "scale": 3,
+  "stage2_json": {
+    "target": "Windows開始按鈕（四色視窗圖示）",
+    "bounding_box": [
+      63,
+      879,
+      143,
+      959
+    ],
+    "confidence": 0.99,
+    "recommended_action": "確認該區域為開始按鈕，可直接點擊或使用鍵盤快捷鍵"
+  },
+  "final_box_mapped_to_original": [
+    21,
+    1080,
+    48,
+    1107
+  ]
+}
